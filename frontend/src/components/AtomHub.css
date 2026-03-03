@@ -1,0 +1,19 @@
+.atom-hub {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 20px;
+  gap: 14px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.hub-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .atom-hub { padding: 12px; }
+}
