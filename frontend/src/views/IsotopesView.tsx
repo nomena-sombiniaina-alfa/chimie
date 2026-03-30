@@ -53,6 +53,10 @@ export default function IsotopesView() {
   const selectIsotope = (A: number) => setIsotopeShift(A - el.Z - standardN)
   const reset = () => setIsotopeShift(0)
 
+  // On n'expose que les neutrons correspondant à des isotopes naturels.
+  // Si la sélection courante n'est pas un isotope naturel, on rebascule sur standard.
+  const isOnNatural = isotopes.length === 0 || isotopes.some(i => i.A === massNumber)
+
   return (
     <div className="view scrollable">
       <div className="iso-card">
@@ -67,21 +71,9 @@ export default function IsotopesView() {
           <button className="iso-btn" onClick={reset} disabled={isotopeShift === 0}>↺ standard</button>
         </div>
 
-        <div className="iso-controls">
-          <label>Modifier le nombre de neutrons</label>
-          <input
-            type="range" min="-5" max="10" step="1"
-            value={isotopeShift}
-            onChange={e => setIsotopeShift(parseInt(e.target.value, 10))}
-          />
-          <div className={`shift-display ${isotopeShift > 0 ? 'pos' : isotopeShift < 0 ? 'neg' : ''}`}>
-            {isotopeShift > 0 ? '+' : ''}{isotopeShift} neutron(s)
-          </div>
-        </div>
-
         {isotopes.length > 0 ? (
           <>
-            <h5>Isotopes naturels</h5>
+            <h5>Isotopes naturels documentés</h5>
             <div className="iso-list">
               {isotopes.map(iso => (
                 <button
@@ -90,7 +82,7 @@ export default function IsotopesView() {
                   onClick={() => selectIsotope(iso.A)}
                 >
                   <div className="iso-name">{iso.name}</div>
-                  <div className="iso-A2">A = {iso.A}</div>
+                  <div className="iso-A2">A = {iso.A}  ·  {iso.A - el.Z} n⁰</div>
                   <div className="iso-meta">
                     {iso.abundance > 0 && <span>{iso.abundance}% naturel</span>}
                     {!iso.stable
@@ -100,11 +92,17 @@ export default function IsotopesView() {
                 </button>
               ))}
             </div>
+            {!isOnNatural && (
+              <div className="iso-warning">
+                Composition non naturelle pour cet élément. Cliquez sur un isotope ci-dessus
+                ou utilisez « ↺ standard ».
+              </div>
+            )}
           </>
         ) : (
           <div className="no-data">
-            Pas de base d'isotopes courants pour cet élément dans cette version.
-            Utilisez le curseur pour explorer des compositions hypothétiques.
+            Aucun isotope naturel documenté pour cet élément (élément artificiel ou trop rare
+            pour être catalogué).
           </div>
         )}
 
@@ -119,6 +117,15 @@ export default function IsotopesView() {
         .iso-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
         .iso-card h4 { margin: 0 0 12px; font-size: 16px; }
         .iso-card h5 { margin: 16px 0 8px; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .iso-warning {
+          margin-top: 10px;
+          padding: 8px 12px;
+          background: rgba(255, 200, 80, 0.10);
+          border: 1px solid rgba(255, 200, 80, 0.30);
+          color: #ffcc66;
+          border-radius: 6px;
+          font-size: 12px;
+        }
         .iso-banner {
           display: flex; align-items: center; gap: 10px;
           padding: 10px 14px; background: var(--bg-2);
@@ -132,10 +139,6 @@ export default function IsotopesView() {
         }
         .iso-btn:hover:not(:disabled) { border-color: var(--accent); }
         .iso-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .iso-controls label { display: block; color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-        .shift-display { text-align: center; font-family: ui-monospace, monospace; font-size: 13px; margin-top: 4px; color: var(--text-dim); }
-        .shift-display.pos { color: #7fffaa; }
-        .shift-display.neg { color: #ff9999; }
         .iso-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
         .iso-item {
           background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px;
