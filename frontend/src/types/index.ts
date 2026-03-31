@@ -44,6 +44,9 @@ export interface ElementDetail {
   color: string
   state: string
   description: ElementDescription
+  validCharges: number[]
+  ionizationEnergies: number[]
+  electronAffinity: number | null
 }
 
 export interface Source {

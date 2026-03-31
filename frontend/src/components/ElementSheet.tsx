@@ -1,10 +1,16 @@
 import { useAtomStore, getElectronCount, getNeutrons } from '../store/atomStore'
-import { ionLabel } from '../data/electronConfig'
-import { shellDistribution, getValenceElectrons } from '../data/electronConfig'
+import { ionLabel, shellDistribution, getValenceElectrons } from '../data/electronConfig'
 import './ElementSheet.css'
 
+function formatEnergy(kjmol: number): string {
+  if (kjmol >= 1000) {
+    return `${(kjmol / 1000).toFixed(2).replace(/\.?0+$/, '')} MJ/mol`
+  }
+  return `${Math.round(kjmol)} kJ/mol`
+}
+
 export default function ElementSheet() {
-  const { currentDetail, charge, isotopeShift, addElectron, removeElectron, neutralize } = useAtomStore()
+  const { currentDetail, charge, isotopeShift } = useAtomStore()
   if (!currentDetail) return null
 
   const cat = currentDetail.category
@@ -13,6 +19,41 @@ export default function ElementSheet() {
   const massNumber = currentDetail.Z + neutrons
   const valence = getValenceElectrons(shellDistribution(electrons))
   const label = ionLabel(currentDetail.symbol, charge)
+
+  const validCharges = currentDetail.validCharges.length > 0
+    ? [...currentDetail.validCharges].sort((a, b) => a - b)
+    : [0]
+  const ies = currentDetail.ionizationEnergies
+  const ea = currentDetail.electronAffinity
+
+  // Pour un état de charge q, retourne l'énergie cumulée :
+  //   q > 0 : Σ IE_1..IE_q (énergie pour arracher q électrons)
+  //   q < 0 : -|q| × |EA| (gain net si EA disponible, sinon null)
+  //   q = 0 : null (neutre, pas d'énergie associée)
+  function cumulativeEnergy(q: number): number | null {
+    if (q === 0) return null
+    if (q > 0) {
+      if (ies.length < q) return null
+      return ies.slice(0, q).reduce((s, x) => s + x, 0)
+    }
+    if (ea != null) return -Math.abs(q) * ea
+    return null
+  }
+
+  function chargeLabel(q: number): string {
+    if (q === 0) return currentDetail!.symbol
+    return ionLabel(currentDetail!.symbol, q)
+  }
+
+  // Bouton actif si la charge sélectionnée existe dans validCharges
+  const isCurrentValid = validCharges.includes(charge)
+
+  // Custom setter qui passe par le store (selectElement reset charge à 0,
+  // on doit utiliser une voie directe via store)
+  const store = useAtomStore.getState
+  const setCharge = (q: number) => {
+    useAtomStore.setState({ charge: q })
+  }
 
   return (
     <section className="sheet">
@@ -49,14 +90,39 @@ export default function ElementSheet() {
             <div className="particle"><span className="dot neutron" /><span className="count">{neutrons}</span><span className="kind">neutrons</span></div>
             <div className="particle"><span className="dot electron" /><span className="count">{electrons}</span><span className="kind">électrons</span></div>
           </div>
-          <div className="charge-row">
-            <button className="btn" onClick={removeElectron} disabled={electrons === 0} title="Retirer un électron">− e⁻</button>
-            <div className={`charge-display ${charge > 0 ? 'pos' : charge < 0 ? 'neg' : ''}`}>
-              {charge > 0 ? '+' : ''}{charge}
+
+          <div className="charge-block">
+            <div className="charge-label">État ionique (états observés)</div>
+            <div className="charge-list">
+              {validCharges.map(q => {
+                const energy = cumulativeEnergy(q)
+                return (
+                  <button
+                    key={q}
+                    className={`charge-btn ${charge === q ? 'active' : ''} ${q > 0 ? 'cation' : q < 0 ? 'anion' : 'neutral'}`}
+                    onClick={() => setCharge(q)}
+                  >
+                    <span className="ion-sym">{chargeLabel(q)}</span>
+                    <span className="ion-energy">
+                      {q === 0
+                        ? 'neutre'
+                        : energy != null
+                          ? (q > 0
+                              ? `↑ ${formatEnergy(energy)}`
+                              : `↓ ${formatEnergy(Math.abs(energy))}`)
+                          : '— énergie n.d.'}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
-            <button className="btn" onClick={addElectron} title="Ajouter un électron">+ e⁻</button>
-            <button className="btn small" onClick={neutralize} disabled={charge === 0}>↺ neutre</button>
+            {!isCurrentValid && (
+              <div className="charge-warning">
+                Charge {charge > 0 ? '+' : ''}{charge} non observée naturellement pour cet élément.
+              </div>
+            )}
           </div>
+
           <div className="valence">
             <span>électrons de valence</span>
             <strong>{valence}</strong>

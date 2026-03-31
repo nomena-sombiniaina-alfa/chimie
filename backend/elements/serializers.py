@@ -30,6 +30,9 @@ class ElementDetailSerializer(serializers.ModelSerializer):
     atomicRadius = serializers.IntegerField(source='atomic_radius', allow_null=True)
     ionizationEnergy = serializers.FloatField(source='ionization_energy', allow_null=True)
     description = serializers.SerializerMethodField()
+    validCharges = serializers.JSONField(source='valid_charges')
+    ionizationEnergies = serializers.JSONField(source='ionization_energies')
+    electronAffinity = serializers.FloatField(source='electron_affinity', allow_null=True)
 
     class Meta:
         model = Element
@@ -37,7 +40,8 @@ class ElementDetailSerializer(serializers.ModelSerializer):
             'Z', 'symbol', 'nameFR', 'mass', 'category',
             'period', 'group', 'block',
             'electronegativity', 'atomicRadius', 'ionizationEnergy', 'density',
-            'year', 'color', 'state', 'description'
+            'year', 'color', 'state', 'description',
+            'validCharges', 'ionizationEnergies', 'electronAffinity',
         )
 
     def get_description(self, obj):

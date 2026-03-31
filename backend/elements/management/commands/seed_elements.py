@@ -5,6 +5,7 @@ from django.db import transaction
 from elements.models import Category, Element, Source
 from elements.seed_data import CATEGORIES, ELEMENTS_RAW, SOURCES
 from elements.seed_descriptions import DESCRIPTIONS
+from elements.seed_oxidation import VALID_CHARGES, IONIZATION_ENERGIES, ELECTRON_AFFINITIES
 
 
 def _parse_float(s):
@@ -70,6 +71,9 @@ class Command(BaseCommand):
                     specificity=desc.get('specificity', ''),
                     uses=desc.get('uses', []),
                     role=desc.get('role', ''),
+                    valid_charges=VALID_CHARGES.get(Z, [0]),
+                    ionization_energies=IONIZATION_ENERGIES.get(Z, []),
+                    electron_affinity=ELECTRON_AFFINITIES.get(Z),
                 ),
             )
             created += 1

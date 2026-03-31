@@ -46,6 +46,14 @@ class Element(models.Model):
     uses = models.JSONField(default=list, blank=True)
     role = models.TextField(blank=True, default='')
 
+    # Ions : états d'oxydation courants et énergies d'ionisation successives (kJ/mol)
+    valid_charges = models.JSONField(default=list, blank=True,
+                                     help_text="États d'oxydation observés (ex : [0, +2, +3] pour le fer)")
+    ionization_energies = models.JSONField(default=list, blank=True,
+                                          help_text="IE1, IE2, IE3, ... en kJ/mol")
+    electron_affinity = models.FloatField(null=True, blank=True,
+                                          help_text="Affinité électronique (kJ/mol)")
+
     class Meta:
         ordering = ['Z']
 
