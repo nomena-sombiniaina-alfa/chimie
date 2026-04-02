@@ -13,7 +13,6 @@
   gap: 12px;
   flex-wrap: wrap;
 }
-
 .search {
   background: var(--bg-2);
   border: 1px solid var(--border);
@@ -32,9 +31,10 @@
   grid-auto-rows: 1fr;
   gap: 3px;
   aspect-ratio: 18 / 10;
-  min-height: 360px;
+  min-height: 420px;
 }
 
+/* ─── Légende intégrée ─────────────────────────────────────── */
 .legend-inset {
   grid-row: 1 / 4;
   grid-column: 3 / 13;
@@ -48,12 +48,7 @@
   min-width: 0;
   min-height: 0;
 }
-.legend-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
+.legend-head { display: flex; align-items: center; }
 .legend-title {
   font-size: 10px;
   text-transform: uppercase;
@@ -61,57 +56,63 @@
   color: var(--text-dim);
   font-weight: 600;
 }
-.legend-clear {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.legend-clear:hover { border-color: var(--accent); color: var(--accent); }
-
 .legend-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 3px;
+  gap: 4px;
   flex: 1;
   min-height: 0;
 }
+
 .filter {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  padding: 3px 6px;
+  position: relative;
+  padding: 4px 8px;
   border-radius: 5px;
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-2);
+  border: 1px solid color-mix(in srgb, var(--col, var(--border)) 55%, var(--border));
+  color: #fff;
+  overflow: hidden;
+  cursor: pointer;
   transition: all 0.12s ease;
-  min-width: 0;
-  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }
-.filter .lbl {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.filter::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--col, transparent);
+  opacity: 0.28;
+  transition: opacity 0.12s ease;
+  pointer-events: none;
 }
-.filter:hover { color: var(--text); border-color: var(--col, var(--accent)); }
+.filter > * { position: relative; z-index: 1; }
+.filter:hover { transform: translateY(-1px); }
+.filter:hover::before { opacity: 0.5; }
 .filter.active {
-  background: color-mix(in srgb, var(--col, var(--accent)) 22%, var(--bg-2));
   border-color: var(--col, var(--accent));
-  color: var(--text);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--col, var(--accent)) 30%, transparent);
+  box-shadow: 0 0 0 1px var(--col, var(--accent)),
+              0 0 12px color-mix(in srgb, var(--col, var(--accent)) 45%, transparent);
 }
-.filter .dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
+.filter.active::before { opacity: 0.6; }
+
+/* "Tous" : bouton neutre (pas de --col) */
+.filter.all {
+  background: var(--bg-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+.filter.all::before { display: none; }
+.filter.all:hover { border-color: var(--accent); color: var(--accent); }
+.filter.all.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.18), rgba(255,85,119,0.12));
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: 0 0 0 1px rgba(0,212,255,0.4);
 }
 
+/* ─── Cellules ─────────────────────────────────────────────── */
 .cell {
   background: var(--bg-2);
   border: 1px solid color-mix(in srgb, var(--col, var(--border)) 55%, var(--border));
@@ -123,7 +124,7 @@
   justify-content: center;
   cursor: pointer;
   position: relative;
-  transition: all 0.15s ease;
+  transition: all 0.15s ease, opacity 0.18s ease;
   overflow: hidden;
   min-width: 0;
 }
@@ -136,27 +137,52 @@
   pointer-events: none;
   transition: opacity 0.15s ease;
 }
-.cell:hover { transform: translateY(-1px); border-color: var(--col); z-index: 2; }
-.cell:hover::before { opacity: 0.4; }
+.cell:hover {
+  transform: translateY(-1px);
+  border-color: var(--col);
+  z-index: 2;
+}
+.cell:hover::before { opacity: 0.55; }
 .cell.active {
   border-color: var(--col);
   box-shadow: 0 0 0 2px var(--col), 0 4px 18px color-mix(in srgb, var(--col) 60%, transparent);
   z-index: 3;
 }
-.cell.active::before { opacity: 0.55; }
-.cell.dim { opacity: 0.22; }
-.cell .z { font-size: 8px; color: rgba(255,255,255,0.65); line-height: 1; position: relative; z-index: 1; }
-.cell .sym {
-  font-weight: 700;
-  font-size: 12px;
-  color: #fff;
-  line-height: 1.1;
+.cell.active::before { opacity: 0.62; }
+.cell.dim { opacity: 0.18; }
+
+/* hover sur un filtre → highlight des cellules de cette catégorie */
+.cell.preview {
+  z-index: 2;
+  box-shadow: 0 0 0 1px var(--col),
+              0 4px 14px color-mix(in srgb, var(--col) 45%, transparent);
+}
+.cell.preview::before { opacity: 0.48; }
+
+.cell .z {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1;
   position: relative;
   z-index: 1;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
-.cell .mass { font-size: 7px; color: rgba(255,255,255,0.55); position: relative; z-index: 1; }
-.cell .sym.tiny { font-size: 9px; }
+.cell .sym {
+  font-weight: 700;
+  font-size: 17px;
+  color: #fff;
+  line-height: 1.1;
+  margin: 1px 0;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.cell .mass {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.6);
+  position: relative;
+  z-index: 1;
+}
+.cell .sym.tiny { font-size: 12px; }
 
 .cell.placeholder {
   background: transparent;
@@ -166,24 +192,11 @@
 }
 .cell.placeholder:hover { transform: none; border-color: var(--border); }
 .cell.placeholder::before { display: none; }
-
-.preview {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.preview-top { display: flex; align-items: baseline; gap: 10px; }
-.preview-z { color: var(--text-dim); font-size: 11px; }
-.preview-sym { font-weight: 700; font-size: 18px; }
-.preview-name { color: var(--text); font-size: 14px; }
-.preview-info { color: var(--text-dim); font-size: 11px; display: flex; gap: 6px; flex-wrap: wrap; }
+.cell.placeholder .z { font-size: 9px; }
+.cell.placeholder .sym { font-size: 11px; text-shadow: none; color: var(--text-dim); }
 
 @media (max-width: 1100px) {
-  .grid { min-height: 280px; }
+  .grid { min-height: 320px; }
+  .cell .sym { font-size: 14px; }
   .cell .mass { display: none; }
 }
