@@ -5,7 +5,7 @@ import './PeriodicTable.css'
 
 export default function PeriodicTable() {
   const {
-    elements, categories, selectedZ, filter, search,
+    elements, categories, filter, search,
     setFilter, setSearch, selectElement,
   } = useAtomStore()
 
@@ -85,13 +85,13 @@ export default function PeriodicTable() {
           cols.map(col => {
             const el = cellMap.get(`${row}-${col}`)
             if (el) {
+              const dimmed = isDimmed(el)
               return (
                 <div
                   key={`${row}-${col}`}
                   className={[
                     'cell',
-                    isDimmed(el) ? 'dim' : '',
-                    selectedZ === el.Z ? 'active' : '',
+                    dimmed ? 'dim' : '',
                     isPreview(el) ? 'preview' : '',
                   ].filter(Boolean).join(' ')}
                   style={{
@@ -99,7 +99,7 @@ export default function PeriodicTable() {
                     gridColumn: col,
                     ['--col' as any]: categories[el.category]?.color,
                   }}
-                  onClick={() => selectElement(el.Z)}
+                  onClick={dimmed ? undefined : () => selectElement(el.Z)}
                 >
                   <span className="z">{el.Z}</span>
                   <span className="sym">{el.symbol}</span>

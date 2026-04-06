@@ -143,13 +143,10 @@
   z-index: 2;
 }
 .cell:hover::before { opacity: 0.55; }
-.cell.active {
-  border-color: var(--col);
-  box-shadow: 0 0 0 2px var(--col), 0 4px 18px color-mix(in srgb, var(--col) 60%, transparent);
-  z-index: 3;
+.cell.dim {
+  opacity: 0.18;
+  pointer-events: none;
 }
-.cell.active::before { opacity: 0.62; }
-.cell.dim { opacity: 0.18; }
 
 /* hover sur un filtre → highlight des cellules de cette catégorie */
 .cell.preview {
