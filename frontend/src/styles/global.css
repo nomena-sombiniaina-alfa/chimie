@@ -169,3 +169,13 @@ input[type="range"]::-moz-range-thumb {
   font-size: 14px;
 }
 .error { color: #ff7777; }
+
+.app-footer {
+  padding: 8px 24px;
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.015);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+}

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import AtomHub from './components/AtomHub'
 import UnitsHub from './components/UnitsHub'
+import SourcesPanel from './components/SourcesPanel'
+import { useAtomStore } from './store/atomStore'
 
 type TabId = 'atom' | 'units'
 
@@ -11,8 +13,12 @@ const TABS: { id: TabId; icon: string; label: string }[] = [
 
 export default function App() {
   const [active, setActive] = useState<TabId>('atom')
+  const { loaded, loadAll } = useAtomStore()
 
-  // Petit lifecycle log : la console aide à débugger pendant le dev.
+  // Données atomiques chargées globalement : le footer "sources" reste accessible
+  // depuis n'importe quel onglet.
+  useEffect(() => { if (!loaded) loadAll() }, [loaded, loadAll])
+
   useEffect(() => {
     document.title = `Chimie - ${TABS.find(t => t.id === active)?.label}`
   }, [active])
@@ -43,6 +49,10 @@ export default function App() {
         {active === 'atom'  ? <AtomHub />  : null}
         {active === 'units' ? <UnitsHub /> : null}
       </main>
+
+      <footer className="app-footer">
+        <SourcesPanel />
+      </footer>
     </div>
   )
 }
