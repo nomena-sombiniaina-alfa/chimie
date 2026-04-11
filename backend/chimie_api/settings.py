@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'elements',
     'units',
+    'bonds',
 ]
 
 MIDDLEWARE = [

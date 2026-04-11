@@ -98,6 +98,34 @@ export interface SIConstant {
   defines: string
 }
 
+// Liaisons chimiques
+export type BondCategory = 'intra' | 'inter' | 'theory'
+
+export interface BondListItem {
+  slug: string
+  name: string
+  icon: string
+  category: BondCategory
+  order: number
+}
+
+export interface BondExample {
+  formula: string
+  name: string
+  notes: string
+}
+
+export interface BondDetail extends BondListItem {
+  year: string
+  discoveredBy: string
+  definition: string
+  principle: string
+  energyRange: string
+  examples: BondExample[]
+  keyConcepts: string[]
+  pitfalls: string[]
+}
+
 // Configuration électronique calculée côté client
 export type Subshell = string  // ex: "1s", "2p", "3d"
 export type ConfigEntry = [Subshell, number]

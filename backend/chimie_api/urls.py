@@ -14,6 +14,8 @@ def root(request):
             'units':      '/api/units/',
             'unit':       '/api/units/<slug>/',
             'constants':  '/api/si-constants/',
+            'bonds':      '/api/bonds/',
+            'bond':       '/api/bonds/<slug>/',
         }
     })
 
@@ -23,4 +25,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('elements.urls')),
     path('api/', include('units.urls')),
+    path('api/', include('bonds.urls')),
 ]

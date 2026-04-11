@@ -1,6 +1,7 @@
 import type {
   Category, ElementListItem, ElementDetail, Source,
   UnitListItem, UnitDetail, SIConstant,
+  BondListItem, BondDetail,
 } from '../types'
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api'
@@ -24,4 +25,8 @@ export const api = {
   listUnits:    () => fetchJSON<UnitListItem[]>('/units/'),
   getUnit:      (slug: string) => fetchJSON<UnitDetail>(`/units/${slug}/`),
   listConstants:() => fetchJSON<SIConstant[]>('/si-constants/'),
+
+  // Bonds
+  listBonds:    () => fetchJSON<BondListItem[]>('/bonds/'),
+  getBond:      (slug: string) => fetchJSON<BondDetail>(`/bonds/${slug}/`),
 }
