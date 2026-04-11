@@ -16,6 +16,8 @@ def root(request):
             'constants':  '/api/si-constants/',
             'bonds':      '/api/bonds/',
             'bond':       '/api/bonds/<slug>/',
+            'reactions':  '/api/reactions/',
+            'reaction':   '/api/reactions/<slug>/',
         }
     })
 
@@ -26,4 +28,5 @@ urlpatterns = [
     path('api/', include('elements.urls')),
     path('api/', include('units.urls')),
     path('api/', include('bonds.urls')),
+    path('api/', include('reactions.urls')),
 ]

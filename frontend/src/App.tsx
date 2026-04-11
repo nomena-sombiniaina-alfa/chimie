@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react'
 import AtomHub from './components/AtomHub'
 import UnitsHub from './components/UnitsHub'
 import BondsHub from './components/BondsHub'
+import ReactionsHub from './components/ReactionsHub'
 import SourcesPanel from './components/SourcesPanel'
 import { useAtomStore } from './store/atomStore'
 
-type TabId = 'atom' | 'bonds' | 'units'
+type TabId = 'atom' | 'bonds' | 'reactions' | 'units'
 
 const TABS: { id: TabId; icon: string; label: string }[] = [
-  { id: 'atom',  icon: '⚛️', label: 'Modèle atomique' },
-  { id: 'bonds', icon: '🔗', label: 'Liaisons chimiques' },
-  { id: 'units', icon: '📏', label: 'Unités de mesure' },
+  { id: 'atom',      icon: '⚛️', label: 'Modèle atomique' },
+  { id: 'bonds',     icon: '🔗', label: 'Liaisons chimiques' },
+  { id: 'reactions', icon: '🧪', label: 'Réactions chimiques' },
+  { id: 'units',     icon: '📏', label: 'Unités de mesure' },
 ]
 
 export default function App() {
@@ -48,9 +50,10 @@ export default function App() {
       </nav>
 
       <main className="tab-content">
-        {active === 'atom'  ? <AtomHub />  : null}
-        {active === 'bonds' ? <BondsHub /> : null}
-        {active === 'units' ? <UnitsHub /> : null}
+        {active === 'atom'      ? <AtomHub />      : null}
+        {active === 'bonds'     ? <BondsHub />     : null}
+        {active === 'reactions' ? <ReactionsHub /> : null}
+        {active === 'units'     ? <UnitsHub />     : null}
       </main>
 
       <footer className="app-footer">

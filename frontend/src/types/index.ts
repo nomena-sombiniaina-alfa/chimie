@@ -126,6 +126,43 @@ export interface BondDetail extends BondListItem {
   pitfalls: string[]
 }
 
+// Réactions chimiques
+export type ReactionCategory =
+  | 'combustion' | 'acid-base' | 'redox' | 'precipitation'
+  | 'synthesis' | 'decomposition' | 'substitution' | 'organic'
+
+export type ReactionEnergetics = 'exothermic' | 'endothermic' | 'athermic' | ''
+
+export interface ReactionListItem {
+  slug: string
+  name: string
+  icon: string
+  category: ReactionCategory
+  order: number
+  equation: string
+}
+
+export interface ReactionMechanismStep {
+  step: number
+  text: string
+}
+
+export interface ReactionExample {
+  name: string
+  equation: string
+  notes: string
+}
+
+export interface ReactionDetail extends ReactionListItem {
+  definition: string
+  principle: string
+  energetics: ReactionEnergetics
+  mechanism: ReactionMechanismStep[]
+  examples: ReactionExample[]
+  keyConcepts: string[]
+  pitfalls: string[]
+}
+
 // Configuration électronique calculée côté client
 export type Subshell = string  // ex: "1s", "2p", "3d"
 export type ConfigEntry = [Subshell, number]

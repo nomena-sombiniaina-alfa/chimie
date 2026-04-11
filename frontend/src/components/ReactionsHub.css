@@ -1,0 +1,201 @@
+.reactions {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 14px;
+  padding: 16px 20px 20px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rx-sidebar {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.rx-group { margin-bottom: 14px; }
+.rx-group:last-child { margin-bottom: 0; }
+.rg-head { padding: 6px 8px; }
+.rg-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.rg-hint { font-size: 10px; color: var(--text-dim); line-height: 1.35; }
+
+.rx-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: left;
+  transition: all 0.12s ease;
+  margin-bottom: 2px;
+  color: var(--text);
+}
+.rx-btn:hover {
+  background: var(--bg-2);
+  border-color: var(--border);
+}
+.rx-btn.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(255,85,119,0.08));
+  border-color: var(--accent);
+}
+.rb-ico { font-size: 20px; flex-shrink: 0; }
+.rb-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.rb-name { font-size: 13px; font-weight: 500; }
+.rb-eq {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ───── Détail ───── */
+.rx-detail {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+.rd-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 16px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.rd-ico {
+  font-size: 36px;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-2);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.rd-titles { flex: 1; min-width: 0; }
+.rd-head h1 { margin: 0; font-size: 22px; color: var(--text); }
+.rd-equation {
+  margin: 4px 0 0;
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  color: var(--accent);
+}
+.rd-energetics {
+  padding: 5px 12px;
+  background: var(--bg-2);
+  border: 1px solid;
+  border-radius: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rd-diagram {
+  height: 360px;
+  margin-bottom: 14px;
+}
+.rd-diagram .stage {
+  height: 100%;
+  width: 100%;
+  background: radial-gradient(circle at center, rgba(0,212,255,0.04), transparent 70%), var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.rd-diagram canvas { display: block; width: 100%; height: 100%; }
+
+.rd-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.rd-card h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+.rd-card p { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+.rd-card ul { margin: 0; padding-left: 20px; }
+.rd-card li { font-size: 13px; color: var(--text-dim); line-height: 1.55; margin-bottom: 4px; }
+.rd-card.pitfalls li::marker { color: #ff7777; }
+
+.mechanism {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mechanism li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+.mech-step {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #06121d;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rd-examples {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+.rd-examples .ex {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.ex-name { color: var(--text); font-size: 12px; font-weight: 600; }
+.ex-equation {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 4px;
+}
+.ex-notes { color: var(--text-dim); font-size: 11px; margin-top: 4px; line-height: 1.4; }
+
+@media (max-width: 900px) {
+  .reactions { grid-template-columns: 1fr; padding: 12px; }
+  .rx-sidebar { max-height: 220px; }
+}

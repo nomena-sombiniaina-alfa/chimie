@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'elements',
     'units',
     'bonds',
+    'reactions',
 ]
 
 MIDDLEWARE = [
