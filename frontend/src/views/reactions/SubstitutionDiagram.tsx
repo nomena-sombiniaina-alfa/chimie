@@ -1,93 +1,189 @@
 import { useCanvas } from '../../hooks/useCanvas'
 
-// Schéma : Zn + 2 HCl → ZnCl2 + H2 (bulles de dihydrogène)
+// Morceau de zinc qui s'amenuise réellement dans l'acide. Les bulles d'H2
+// jaillissent du métal, montent à la surface et éclatent. Le zinc rétrécit
+// au fil du temps jusqu'à disparaître, puis la séquence recommence.
 export default function SubstitutionDiagram() {
   const canvasRef = useCanvas(() => {
-    type Bubble = { x: number; y: number; r: number; vy: number }
+    type Bubble = { x: number; y: number; r: number; vy: number; vx: number; surfacing: number }
     let bubbles: Bubble[] = []
+    let nextBubble = 0
+    let znSize = 1.0    // 1 = entier, 0 = disparu
+    let W = 0, H = 0
+    let beakerTop = 0, beakerBot = 0, beakerLeft = 0, beakerRight = 0
+    let waterTop = 0
+    const ZN_INITIAL_W = 90
+    const ZN_INITIAL_H = 30
+
+    function build(w: number, h: number) {
+      W = w; H = h
+      beakerTop = h * 0.12
+      beakerBot = h * 0.78
+      beakerLeft = w * 0.18
+      beakerRight = w * 0.82
+      waterTop = beakerTop + 22
+    }
 
     return {
-      draw: (ctx, w, h, dt, _t) => {
-        const top = h * 0.18, bot = h * 0.72
-        const cx = w / 2
+      onResize: build,
+      draw: (ctx, w, h, dt, t) => {
+        if (W !== w || H !== h) build(w, h)
 
-        // Cuve
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)'
+        // Cycle : zinc rétrécit. Toutes les 12 s : reset à 1.0
+        znSize -= dt * (1 / 12)
+        if (znSize <= 0.05) {
+          znSize = 1.0
+          bubbles = []
+        }
+
+        // Bécher
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)'
         ctx.lineWidth = 2
         ctx.beginPath()
-        ctx.moveTo(w * 0.18, top); ctx.lineTo(w * 0.18, bot)
-        ctx.lineTo(w * 0.82, bot); ctx.lineTo(w * 0.82, top)
+        ctx.moveTo(beakerLeft, beakerTop); ctx.lineTo(beakerLeft, beakerBot)
+        ctx.lineTo(beakerRight, beakerBot); ctx.lineTo(beakerRight, beakerTop)
+        ctx.stroke()
+        // Solution HCl (vert très pâle)
+        ctx.fillStyle = 'rgba(120, 220, 120, 0.10)'
+        ctx.fillRect(beakerLeft + 1, waterTop, beakerRight - beakerLeft - 1, beakerBot - waterTop - 1)
+        // Surface ondulant légèrement
+        ctx.strokeStyle = 'rgba(180, 240, 180, 0.5)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        for (let x = beakerLeft; x <= beakerRight; x += 4) {
+          const y = waterTop + Math.sin(x * 0.08 + t * 3) * 1.5
+          if (x === beakerLeft) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        }
         ctx.stroke()
 
-        // Solution HCl (légèrement verdâtre)
-        ctx.fillStyle = 'rgba(120, 220, 120, 0.10)'
-        ctx.fillRect(w * 0.18, top + 8, w * 0.82 - w * 0.18, bot - top - 8)
-
-        // Morceau de zinc au fond
-        ctx.fillStyle = '#aab4c5'
-        ctx.fillRect(cx - 50, bot - 22, 100, 14)
-        ctx.fillStyle = '#fff'
-        ctx.font = 'bold 13px sans-serif'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText('Zn (solide)', cx, bot - 15)
-
-        // Ions H+ et Cl- en solution
-        for (let i = 0; i < 12; i++) {
-          const x = w * 0.22 + (i % 6) * w * 0.10
-          const y = top + 30 + Math.floor(i / 6) * 40
-          ctx.fillStyle = 'rgba(255, 107, 107, 0.6)'
+        // Ions H+ et Cl- en fond
+        for (let i = 0; i < 18; i++) {
+          const px = beakerLeft + 12 + ((i * 37) % (beakerRight - beakerLeft - 24))
+          const py = waterTop + 14 + Math.floor(i / 8) * 22 + Math.sin(t * 2 + i) * 3
+          ctx.fillStyle = 'rgba(255, 107, 107, 0.45)'
           ctx.font = 'bold 10px sans-serif'
-          ctx.fillText('H⁺', x, y)
-          ctx.fillStyle = 'rgba(127, 255, 170, 0.5)'
-          ctx.fillText('Cl⁻', x + 25, y + 15)
+          ctx.textAlign = 'center'
+          ctx.fillText('H⁺', px, py)
+          ctx.fillStyle = 'rgba(127, 255, 170, 0.4)'
+          ctx.fillText('Cl⁻', px + 22, py + 12)
         }
 
-        // Ions Zn2+ apparaissent près du métal
-        for (let i = 0; i < 3; i++) {
-          const x = cx - 30 + i * 30
-          const y = bot - 40 - 5 * Math.sin(_t * 2 + i)
-          ctx.fillStyle = '#dde2eb'
-          ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill()
-          ctx.fillStyle = '#222'
-          ctx.font = 'bold 9px sans-serif'
-          ctx.fillText('Zn²⁺', x, y)
+        // Bloc de zinc qui rétrécit
+        const cx = w / 2
+        const cy = beakerBot - ZN_INITIAL_H * znSize / 2 - 4
+        const zw = ZN_INITIAL_W * znSize
+        const zh = ZN_INITIAL_H * znSize
+        // Bordure granuleuse simulée (le zinc s'effrite)
+        const ironGrad = ctx.createLinearGradient(0, cy - zh / 2, 0, cy + zh / 2)
+        ironGrad.addColorStop(0, '#bcc3d1')
+        ironGrad.addColorStop(1, '#7a8092')
+        ctx.fillStyle = ironGrad
+        ctx.fillRect(cx - zw / 2, cy - zh / 2, zw, zh)
+        // Effet rongé : petites encoches aléatoires sur les bords
+        ctx.fillStyle = 'rgba(120, 220, 120, 0.12)'
+        for (let i = 0; i < 8; i++) {
+          const ex = cx - zw / 2 + (i / 7) * zw + Math.sin(t * 2 + i) * 2
+          const ey = cy - zh / 2 - 2
+          ctx.beginPath(); ctx.arc(ex, ey, 1.5 + Math.random() * 1.5, 0, Math.PI * 2); ctx.fill()
+        }
+        // Label
+        if (zw > 30) {
+          ctx.fillStyle = '#fff'
+          ctx.font = 'bold 12px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText('Zn', cx, cy)
         }
 
-        // Génération de bulles H2 (sortent du Zn)
-        if (Math.random() < 0.9) {
-          bubbles.push({
-            x: cx - 50 + Math.random() * 100,
-            y: bot - 25,
-            r: 4 + Math.random() * 4,
-            vy: 50 + Math.random() * 30,
-          })
+        // Ions Zn²⁺ qui partent du métal (petits glyphes)
+        for (let i = 0; i < 4; i++) {
+          const off = (t * 30 + i * 90) % 120
+          if (off < 100 && zw > 20) {
+            const ix = cx - zw / 2 - 8 - off * 0.3
+            const iy = cy - zh / 4 + (i - 1.5) * 15
+            const fade = 1 - off / 100
+            ctx.fillStyle = `rgba(221, 226, 235, ${fade})`
+            ctx.beginPath(); ctx.arc(ix, iy, 6, 0, Math.PI * 2); ctx.fill()
+            ctx.fillStyle = `rgba(0, 0, 0, ${fade})`
+            ctx.font = 'bold 8px sans-serif'
+            ctx.textAlign = 'center'
+            ctx.fillText('Zn²⁺', ix, iy)
+          }
         }
+
+        // Spawn de bulles depuis le bloc zinc
+        nextBubble += dt
+        if (nextBubble > 0.05 && zw > 15) {
+          nextBubble = 0
+          const bubblesPerSpawn = 1 + Math.floor(Math.random() * 2)
+          for (let i = 0; i < bubblesPerSpawn; i++) {
+            bubbles.push({
+              x: cx + (Math.random() - 0.5) * zw,
+              y: cy - zh / 2 + (Math.random() - 0.5) * zh / 2,
+              r: 2 + Math.random() * 4,
+              vy: 40 + Math.random() * 50,
+              vx: (Math.random() - 0.5) * 15,
+              surfacing: 0,
+            })
+          }
+        }
+
+        // Animation des bulles
         const alive: Bubble[] = []
         for (const b of bubbles) {
+          if (b.surfacing > 0) {
+            b.surfacing += dt
+            if (b.surfacing > 0.3) continue
+            // Bulle qui éclate à la surface (cercle qui s'agrandit et s'estompe)
+            const popK = b.surfacing / 0.3
+            ctx.strokeStyle = `rgba(200, 230, 255, ${1 - popK})`
+            ctx.lineWidth = 1.5
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.r * (1 + popK * 2), 0, Math.PI * 2); ctx.stroke()
+            alive.push(b)
+            continue
+          }
+          b.x += b.vx * dt
           b.y -= b.vy * dt
-          if (b.y < top - 5) continue
-          const g = ctx.createRadialGradient(b.x - 1, b.y - 1, 0, b.x, b.y, b.r)
-          g.addColorStop(0, 'rgba(200, 230, 255, 0.9)')
-          g.addColorStop(1, 'rgba(120, 180, 240, 0.3)')
-          ctx.fillStyle = g
+          b.vx += (Math.random() - 0.5) * 30 * dt
+          b.vx *= 0.98
+          if (b.y <= waterTop + 4) {
+            b.surfacing = 0.001
+            b.y = waterTop + 4
+          }
+          // Dessin bulle
+          ctx.fillStyle = 'rgba(220, 240, 255, 0.7)'
           ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill()
-          if (b.r > 5) {
-            ctx.fillStyle = '#fff'
-            ctx.font = 'bold 7px sans-serif'
+          ctx.strokeStyle = 'rgba(255,255,255,0.8)'
+          ctx.lineWidth = 0.7
+          ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke()
+          if (b.r > 4) {
+            ctx.fillStyle = 'rgba(255,255,255,0.9)'
+            ctx.font = 'bold 6px sans-serif'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
             ctx.fillText('H₂', b.x, b.y)
           }
           alive.push(b)
         }
         bubbles = alive
 
+        // Indicateur de masse restante de Zn
+        ctx.fillStyle = 'rgba(255,255,255,0.5)'
+        ctx.font = '11px sans-serif'
+        ctx.textAlign = 'left'
+        ctx.fillText(`Zn restant : ${Math.round(znSize * 100)} %`, beakerLeft + 6, beakerTop - 8)
+        ctx.textAlign = 'right'
+        ctx.fillText(`H₂ libéré : ${bubbles.length} bulles`, beakerRight - 6, beakerTop - 8)
+
         // Légende
         ctx.fillStyle = '#fff'
         ctx.font = 'bold 16px sans-serif'
-        ctx.fillText('Zn + 2 HCl  →  ZnCl₂ + H₂ ↑', w / 2, h - 50)
+        ctx.textAlign = 'center'
+        ctx.fillText('Zn + 2 HCl  ->  ZnCl₂ + H₂ ↑', w / 2, h - 50)
         ctx.fillStyle = 'rgba(255,255,255,0.5)'
-        ctx.font = '12px sans-serif'
-        ctx.fillText('Le Zn (plus réducteur) déplace H - H⁺ est réduit en H₂ gazeux', w / 2, h - 25)
+        ctx.font = '11px sans-serif'
+        ctx.fillText('Le zinc cède 2 e⁻ et passe en solution. Les H⁺ captent les e⁻ et s\'échappent en H₂ gazeux.', w / 2, h - 28)
         ctx.textAlign = 'start'
         ctx.textBaseline = 'alphabetic'
       }

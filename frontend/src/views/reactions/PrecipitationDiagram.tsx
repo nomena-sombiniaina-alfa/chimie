@@ -1,151 +1,217 @@
 import { useCanvas } from '../../hooks/useCanvas'
 
-// Schéma : ions Ag+ et Cl- en solution qui forment des AgCl tombant au fond
+// Scénario saturation : on continue d'ajouter du sel dans une solution déjà
+// très concentrée. Une partie se dissout, le reste cristallise au fond.
 export default function PrecipitationDiagram() {
   const canvasRef = useCanvas(() => {
-    type Ion = { x: number; y: number; vx: number; vy: number; type: 'Ag' | 'Cl' }
-    type Precipitate = { x: number; y: number; vy: number; settled: boolean; r: number }
+    type Ion = { x: number; y: number; vx: number; vy: number; kind: '+' | '-' }
+    type Crystal = { x: number; y: number; vy: number; size: number; settled: boolean; dissolving: number }
     let ions: Ion[] = []
-    let precipitates: Precipitate[] = []
+    let crystals: Crystal[] = []
+    let nextDrop = 0
     let W = 0, H = 0
-    let initialized = false
+    let beakerTop = 0, beakerBot = 0, beakerLeft = 0, beakerRight = 0
+    let waterTop = 0
+
+    const SAT = 70                // seuil de saturation en ions
+    const DROP_INTERVAL = 1.6     // s entre deux ajouts de cristal
+    const ION_PER_CRYSTAL = 10
 
     function build(w: number, h: number) {
       W = w; H = h
+      beakerTop = h * 0.16
+      beakerBot = h * 0.78
+      beakerLeft = w * 0.30
+      beakerRight = w * 0.70
+      waterTop = beakerTop + 18
       ions = []
-      precipitates = []
-      for (let i = 0; i < 25; i++) {
+      crystals = []
+      // Pré-remplir avec beaucoup d'ions déjà dissous (~ saturation)
+      for (let i = 0; i < 55; i++) {
+        const isPlus = Math.random() < 0.5
         ions.push({
-          x: 30 + Math.random() * (w - 60),
-          y: h * 0.18 + Math.random() * (h * 0.55),
+          x: beakerLeft + 8 + Math.random() * (beakerRight - beakerLeft - 16),
+          y: waterTop + 4 + Math.random() * (beakerBot - waterTop - 20),
           vx: (Math.random() - 0.5) * 60,
           vy: (Math.random() - 0.5) * 60,
-          type: 'Ag',
+          kind: isPlus ? '+' : '-',
         })
       }
-      for (let i = 0; i < 25; i++) {
+      nextDrop = 0
+    }
+
+    function dropCrystal() {
+      crystals.push({
+        x: beakerLeft + 30 + Math.random() * (beakerRight - beakerLeft - 60),
+        y: beakerTop - 30,
+        vy: 0,
+        size: 12 + Math.random() * 6,
+        settled: false,
+        dissolving: 0,
+      })
+    }
+
+    function spawnIonsAt(x: number, y: number, count: number) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2
+        const sp = 60 + Math.random() * 80
         ions.push({
-          x: 30 + Math.random() * (w - 60),
-          y: h * 0.18 + Math.random() * (h * 0.55),
-          vx: (Math.random() - 0.5) * 60,
-          vy: (Math.random() - 0.5) * 60,
-          type: 'Cl',
+          x, y,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp,
+          kind: Math.random() < 0.5 ? '+' : '-',
         })
       }
-      initialized = true
     }
 
     return {
       onResize: build,
-      draw: (ctx, w, h, dt) => {
-        if (!initialized || W !== w || H !== h) build(w, h)
+      draw: (ctx, w, h, dt, t) => {
+        if (W !== w || H !== h) build(w, h)
 
-        // Cuve
-        const top = h * 0.15, bot = h * 0.78
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)'
+        // Bécher + eau (teinte plus trouble si conc augmente)
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)'
         ctx.lineWidth = 2
         ctx.beginPath()
-        ctx.moveTo(w * 0.15, top); ctx.lineTo(w * 0.15, bot)
-        ctx.lineTo(w * 0.85, bot); ctx.lineTo(w * 0.85, top)
+        ctx.moveTo(beakerLeft, beakerTop); ctx.lineTo(beakerLeft, beakerBot)
+        ctx.lineTo(beakerRight, beakerBot); ctx.lineTo(beakerRight, beakerTop)
         ctx.stroke()
-        ctx.fillStyle = 'rgba(100, 180, 240, 0.06)'
-        ctx.fillRect(w * 0.15, h * 0.20, w * 0.70, bot - h * 0.20)
+        const conc = Math.min(1, ions.length / SAT)
+        const cloudy = Math.floor(conc * 30)
+        ctx.fillStyle = `rgba(${100 + cloudy}, ${180 + cloudy * 0.5}, 240, 0.${10 + Math.floor(conc * 6)})`
+        ctx.fillRect(beakerLeft + 1, waterTop, beakerRight - beakerLeft - 1, beakerBot - waterTop - 1)
+        ctx.strokeStyle = 'rgba(140, 200, 255, 0.5)'
+        ctx.lineWidth = 1
+        ctx.beginPath(); ctx.moveTo(beakerLeft + 1, waterTop); ctx.lineTo(beakerRight - 1, waterTop); ctx.stroke()
 
-        // Déplacer les ions et détecter les collisions Ag+...Cl-
+        // Salière au-dessus
+        const shakerX = (beakerLeft + beakerRight) / 2
+        const shakerY = beakerTop - 60 + Math.sin(t * 1.4) * 3
+        ctx.fillStyle = '#aab4c5'
+        ctx.fillRect(shakerX - 22, shakerY, 44, 28)
+        ctx.fillStyle = '#6d7484'
+        ctx.fillRect(shakerX - 22, shakerY, 44, 6)
+        ctx.fillStyle = '#0a0e1a'
+        for (let i = -1; i <= 1; i++) {
+          ctx.beginPath(); ctx.arc(shakerX + i * 10, shakerY + 3, 1.6, 0, Math.PI * 2); ctx.fill()
+        }
+        ctx.fillStyle = '#fff'
+        ctx.font = 'bold 8px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('NaCl', shakerX, shakerY + 18)
+
+        // Spawn périodique de cristaux
+        nextDrop += dt
+        if (nextDrop > DROP_INTERVAL) {
+          nextDrop = 0
+          dropCrystal()
+        }
+
+        // Mouvement des ions
         for (const ion of ions) {
-          ion.vx += (Math.random() - 0.5) * 30 * dt
-          ion.vy += (Math.random() - 0.5) * 30 * dt
+          ion.vx += (Math.random() - 0.5) * 50 * dt
+          ion.vy += (Math.random() - 0.5) * 50 * dt
           ion.vx *= 0.99
           ion.vy *= 0.99
           ion.x += ion.vx * dt
           ion.y += ion.vy * dt
-          // Bords
-          if (ion.x < w * 0.17) { ion.x = w * 0.17; ion.vx *= -0.7 }
-          if (ion.x > w * 0.83) { ion.x = w * 0.83; ion.vx *= -0.7 }
-          if (ion.y < h * 0.20) { ion.y = h * 0.20; ion.vy *= -0.7 }
-          if (ion.y > bot - 4)  { ion.y = bot - 4;  ion.vy *= -0.7 }
+          if (ion.x < beakerLeft + 5) { ion.x = beakerLeft + 5; ion.vx *= -0.7 }
+          if (ion.x > beakerRight - 5) { ion.x = beakerRight - 5; ion.vx *= -0.7 }
+          if (ion.y < waterTop + 3) { ion.y = waterTop + 3; ion.vy *= -0.7 }
+          if (ion.y > beakerBot - 4) { ion.y = beakerBot - 4; ion.vy *= -0.7 }
         }
 
-        // Collisions
-        const consumed = new Set<number>()
-        for (let i = 0; i < ions.length; i++) {
-          if (consumed.has(i)) continue
-          const a = ions[i]
-          for (let j = i + 1; j < ions.length; j++) {
-            if (consumed.has(j)) continue
-            const b = ions[j]
-            if (a.type === b.type) continue
-            const dx = a.x - b.x, dy = a.y - b.y
-            if (dx * dx + dy * dy < 14 * 14) {
-              consumed.add(i); consumed.add(j)
-              precipitates.push({
-                x: (a.x + b.x) / 2,
-                y: (a.y + b.y) / 2,
-                vy: 0,
-                settled: false,
-                r: 5 + Math.random() * 2,
-              })
-              break
+        // Cristaux : chute, dissolution ou sédimentation
+        for (const c of crystals) {
+          if (c.dissolving > 0) { c.dissolving += dt; continue }
+          if (c.settled) continue
+          c.vy += 80 * dt
+          c.y += c.vy * dt
+          if (c.y >= waterTop + c.size / 2 && c.y < waterTop + c.size / 2 + 20 && !c.settled) {
+            if (ions.length < SAT) {
+              c.dissolving = 0.001
+              spawnIonsAt(c.x, c.y, ION_PER_CRYSTAL)
+              continue
             }
           }
-        }
-        ions = ions.filter((_, i) => !consumed.has(i))
-
-        // Précipité tombe et s'empile
-        const floor = bot - 4
-        for (let i = 0; i < precipitates.length; i++) {
-          const p = precipitates[i]
-          if (p.settled) continue
-          p.vy += 80 * dt
-          p.y += p.vy * dt
-          let rest = floor - p.r
-          for (const o of precipitates) {
-            if (!o.settled || o === p) continue
-            const dx = p.x - o.x
-            if (Math.abs(dx) < (p.r + o.r) * 0.9) {
-              const top2 = o.y - (p.r + o.r) * 0.9
-              if (top2 < rest) rest = top2
+          let rest = beakerBot - c.size / 2 - 2
+          for (const o of crystals) {
+            if (o === c || !o.settled) continue
+            const dx = c.x - o.x
+            if (Math.abs(dx) < (c.size + o.size) * 0.55) {
+              const top = o.y - (c.size + o.size) * 0.5
+              if (top < rest) rest = top
             }
           }
-          if (p.y >= rest) { p.y = rest; p.vy = 0; p.settled = true }
+          if (c.y >= rest) { c.y = rest; c.vy = 0; c.settled = true }
         }
+        crystals = crystals.filter(c => c.dissolving < 0.6)
 
         // Dessiner ions
         for (const ion of ions) {
-          const color = ion.type === 'Ag' ? '#bfd8ff' : '#9be8a3'
-          const glow = ion.type === 'Ag' ? 'rgba(100, 160, 255, 0.5)' : 'rgba(120, 220, 140, 0.5)'
-          ctx.shadowColor = glow
-          ctx.shadowBlur = 6
-          ctx.fillStyle = color
-          ctx.beginPath(); ctx.arc(ion.x, ion.y, 5, 0, Math.PI * 2); ctx.fill()
-          ctx.shadowBlur = 0
-          ctx.fillStyle = '#0c1424'
-          ctx.font = 'bold 8px sans-serif'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(ion.type === 'Ag' ? '+' : '-', ion.x, ion.y)
+          ctx.fillStyle = ion.kind === '+' ? '#ff8a8a' : '#7fffaa'
+          ctx.beginPath(); ctx.arc(ion.x, ion.y, 3.5, 0, Math.PI * 2); ctx.fill()
         }
+
+        // Dessiner cristaux
+        for (const c of crystals) {
+          const k = c.dissolving > 0 ? Math.max(0, 1 - c.dissolving / 0.6) : 1
+          if (k <= 0) continue
+          ctx.save()
+          ctx.globalAlpha = k
+          ctx.translate(c.x, c.y)
+          ctx.rotate((c.x + c.y) * 0.01)
+          const g = ctx.createLinearGradient(-c.size / 2, -c.size / 2, c.size / 2, c.size / 2)
+          g.addColorStop(0, '#ffffff')
+          g.addColorStop(1, '#aab4c5')
+          ctx.fillStyle = g
+          ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size)
+          ctx.strokeStyle = 'rgba(0,0,0,0.25)'
+          ctx.lineWidth = 1
+          ctx.strokeRect(-c.size / 2, -c.size / 2, c.size, c.size)
+          ctx.restore()
+        }
+
+        // Jauge de saturation à droite
+        const gaugeX = beakerRight + 24
+        const gaugeY = waterTop
+        const gaugeH = beakerBot - waterTop
+        const gaugeW = 14
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)'
+        ctx.lineWidth = 1
+        ctx.strokeRect(gaugeX, gaugeY, gaugeW, gaugeH)
+        const fillH = gaugeH * conc
+        const colGauge = conc < 0.7 ? '#7fffaa' : conc < 1 ? '#ffcc44' : '#ff7777'
+        ctx.fillStyle = colGauge
+        ctx.fillRect(gaugeX, gaugeY + gaugeH - fillH, gaugeW, fillH)
+        ctx.strokeStyle = '#ff7777'
+        ctx.setLineDash([3, 3])
+        ctx.beginPath(); ctx.moveTo(gaugeX - 4, gaugeY); ctx.lineTo(gaugeX + gaugeW + 4, gaugeY); ctx.stroke()
+        ctx.setLineDash([])
+        ctx.fillStyle = '#ff7777'
+        ctx.font = 'bold 9px sans-serif'
+        ctx.textAlign = 'left'
+        ctx.fillText('saturation', gaugeX + gaugeW + 6, gaugeY + 4)
+        ctx.fillStyle = 'rgba(255,255,255,0.6)'
+        ctx.font = '10px sans-serif'
+        ctx.fillText(`${Math.round(conc * 100)} %`, gaugeX + gaugeW + 6, gaugeY + gaugeH - 4)
+
+        // Statut bas
+        const settledCount = crystals.filter(c => c.settled).length
+        const status = conc >= 1
+          ? `Solution saturée : le sel ajouté cristallise au fond (${settledCount} amas)`
+          : `Solution sous-saturée : le sel se dissout encore (${ions.length}/${SAT} ions)`
+        ctx.fillStyle = conc >= 1 ? '#ff9999' : '#7fffaa'
+        ctx.font = 'bold 12px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText(status, w / 2, h - 50)
+        ctx.fillStyle = 'rgba(255,255,255,0.5)'
+        ctx.font = '11px sans-serif'
+        ctx.fillText("NaCl + H₂O  ->  Na⁺ + Cl⁻  (jusqu'à saturation, ensuite NaCl(s) ↓)", w / 2, h - 30)
+
         ctx.textAlign = 'start'
         ctx.textBaseline = 'alphabetic'
-
-        // Dessiner précipité (AgCl blanc)
-        for (const p of precipitates) {
-          const g = ctx.createRadialGradient(p.x - 1, p.y - 1, 0.5, p.x, p.y, p.r)
-          g.addColorStop(0, '#ffffff')
-          g.addColorStop(1, '#a8b6cc')
-          ctx.fillStyle = g
-          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill()
-        }
-
-        // Légende
-        ctx.fillStyle = '#fff'
-        ctx.font = 'bold 16px sans-serif'
-        ctx.textAlign = 'center'
-        ctx.fillText('Ag⁺(aq) + Cl⁻(aq)  →  AgCl(s) ↓', w / 2, h - 50)
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'
-        ctx.font = '12px sans-serif'
-        ctx.fillText(`${precipitates.length} précipités formés · ${ions.length} ions restants`, w / 2, h - 25)
-        ctx.textAlign = 'start'
       }
     }
   }, [])
