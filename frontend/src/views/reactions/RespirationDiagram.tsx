@@ -1,84 +1,110 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
-// Schéma : glucose + O2 entrent dans la mitochondrie, sortent CO2 + H2O + ATP
+// Schéma : glucose + O2 entrent dans la mitochondrie, sortent CO2 + H2O + ATP.
+// Compte les molécules de glucose traitées, plafond à MAX_GLUCOSE.
 export default function RespirationDiagram() {
-  const canvasRef = useCanvas(() => ({
-    draw: (ctx, w, h, _dt, t) => {
-      const cx = w / 2, cy = h / 2 - 20
-      const mitoW = 280, mitoH = 130
+  const canvasRef = useCanvas(() => {
+    const MAX_GLUCOSE = 4
+    const PERIOD = 2  // s par molécule
+    let glucoseCount = 1
+    let frozen = false
+    return {
+      draw: (ctx, w, h, _dt, t) => {
+        const newCount = Math.min(MAX_GLUCOSE, Math.floor(t / PERIOD) + 1)
+        if (newCount !== glucoseCount) glucoseCount = newCount
+        if (glucoseCount >= MAX_GLUCOSE && (t % PERIOD) / PERIOD > 0.95) frozen = true
 
-      // Mitochondrie (ellipse plus stylisée)
-      const gMito = ctx.createRadialGradient(cx, cy, 20, cx, cy, 160)
-      gMito.addColorStop(0, 'rgba(200, 80, 130, 0.25)')
-      gMito.addColorStop(0.8, 'rgba(140, 50, 90, 0.18)')
-      gMito.addColorStop(1, 'rgba(140, 50, 90, 0.05)')
-      ctx.fillStyle = gMito
-      ctx.beginPath(); ctx.ellipse(cx, cy, mitoW / 2, mitoH / 2, 0, 0, Math.PI * 2); ctx.fill()
-      ctx.strokeStyle = 'rgba(220, 120, 160, 0.7)'
-      ctx.lineWidth = 2
-      ctx.beginPath(); ctx.ellipse(cx, cy, mitoW / 2, mitoH / 2, 0, 0, Math.PI * 2); ctx.stroke()
-      // Crêtes mitochondriales
-      ctx.strokeStyle = 'rgba(220, 120, 160, 0.4)'
-      ctx.lineWidth = 1
-      for (let i = 0; i < 4; i++) {
-        const ya = cy - 25 + i * 18
-        ctx.beginPath()
-        ctx.ellipse(cx, ya, mitoW * 0.36, 6, 0, 0, Math.PI * 2)
-        ctx.stroke()
+        const cx = w / 2, cy = h / 2 - 20
+        const mitoW = 280, mitoH = 130
+
+        // Mitochondrie
+        const gMito = ctx.createRadialGradient(cx, cy, 20, cx, cy, 160)
+        gMito.addColorStop(0, 'rgba(200, 80, 130, 0.25)')
+        gMito.addColorStop(0.8, 'rgba(140, 50, 90, 0.18)')
+        gMito.addColorStop(1, 'rgba(140, 50, 90, 0.05)')
+        ctx.fillStyle = gMito
+        ctx.beginPath(); ctx.ellipse(cx, cy, mitoW / 2, mitoH / 2, 0, 0, Math.PI * 2); ctx.fill()
+        ctx.strokeStyle = 'rgba(220, 120, 160, 0.7)'
+        ctx.lineWidth = 2
+        ctx.beginPath(); ctx.ellipse(cx, cy, mitoW / 2, mitoH / 2, 0, 0, Math.PI * 2); ctx.stroke()
+        ctx.strokeStyle = 'rgba(220, 120, 160, 0.4)'
+        ctx.lineWidth = 1
+        for (let i = 0; i < 4; i++) {
+          const ya = cy - 25 + i * 18
+          ctx.beginPath()
+          ctx.ellipse(cx, ya, mitoW * 0.36, 6, 0, 0, Math.PI * 2)
+          ctx.stroke()
+        }
+        ctx.fillStyle = 'rgba(255,255,255,0.6)'
+        ctx.font = 'italic 11px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText('mitochondrie', cx, cy + mitoH / 2 + 16)
+
+        // Entrées (gauche)
+        const inX = cx - mitoW / 2 - 60
+        ctx.fillStyle = '#fff'
+        ctx.font = 'bold 13px sans-serif'
+        ctx.textBaseline = 'middle'
+        drawMolBubble(ctx, inX, cy - 30, '#ffd066', 'C₆H₁₂O₆')
+        drawMolBubble(ctx, inX, cy + 30, '#ff7788', 'O₂')
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)'
+        ctx.lineWidth = 1.5
+        ctx.beginPath(); ctx.moveTo(inX + 30, cy - 30); ctx.lineTo(cx - mitoW / 2 + 8, cy - 30); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(inX + 30, cy + 30); ctx.lineTo(cx - mitoW / 2 + 8, cy + 30); ctx.stroke()
+
+        // Sorties (droite)
+        const outX = cx + mitoW / 2 + 60
+        drawMolBubble(ctx, outX, cy - 30, '#88c8ff', 'H₂O')
+        drawMolBubble(ctx, outX, cy + 30, '#ff8866', 'CO₂')
+
+        ctx.beginPath(); ctx.moveTo(cx + mitoW / 2 - 8, cy - 30); ctx.lineTo(outX - 30, cy - 30); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(cx + mitoW / 2 - 8, cy + 30); ctx.lineTo(outX - 30, cy + 30); ctx.stroke()
+
+        // ATP qui sort (en haut, pulsation) - s'arrête si frozen
+        if (!frozen) {
+          const atpPhase = (t % 2) / 2
+          const atpY = cy - mitoH / 2 - 10 - atpPhase * 20
+          const atpAlpha = 1 - atpPhase
+          ctx.fillStyle = `rgba(255, 220, 80, ${atpAlpha})`
+          ctx.beginPath(); ctx.arc(cx, atpY, 12, 0, Math.PI * 2); ctx.fill()
+          ctx.fillStyle = `rgba(0, 0, 0, ${atpAlpha})`
+          ctx.font = 'bold 10px sans-serif'
+          ctx.fillText('ATP', cx, atpY)
+        }
+
+        ctx.fillStyle = 'rgba(255, 220, 80, 0.6)'
+        ctx.font = 'bold 12px sans-serif'
+        ctx.fillText(`${glucoseCount * 38} ATP produits`, cx, cy - mitoH / 2 - 36)
+
+        // Légende + cycle
+        drawLegend(ctx, 10, 10, [
+          { color: '#ffd066', label: 'C₆H₁₂O₆ (glucose, réactif)' },
+          { color: '#ff7788', label: 'O₂ (oxygène, réactif)' },
+          { color: '#88c8ff', label: 'H₂O (produit)' },
+          { color: '#ff8866', label: 'CO₂ (produit)' },
+          { color: '#ffdc50', label: 'ATP (énergie utile)' },
+        ])
+        drawCycleCounter(ctx, w - 10, h - 70, glucoseCount, MAX_GLUCOSE, 'Glucose')
+
+        ctx.fillStyle = '#fff'
+        ctx.font = 'bold 16px sans-serif'
+        ctx.textBaseline = 'middle'
+        ctx.textAlign = 'center'
+        ctx.fillText('C₆H₁₂O₆ + 6 O₂  ->  6 CO₂ + 6 H₂O + énergie', cx, h - 50)
+        ctx.fillStyle = frozen ? '#ffcc44' : 'rgba(255,255,255,0.5)'
+        ctx.font = '12px sans-serif'
+        ctx.fillText(
+          frozen
+            ? `Cellule rassasiée - ${MAX_GLUCOSE} molécules métabolisées`
+            : 'Même bilan que la combustion, mais ~30 étapes enzymatiques contrôlées',
+          cx, h - 25)
+        ctx.textAlign = 'start'
+        ctx.textBaseline = 'alphabetic'
       }
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'
-      ctx.font = 'italic 11px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('mitochondrie', cx, cy + mitoH / 2 + 16)
-
-      // Entrées (gauche)
-      const inX = cx - mitoW / 2 - 60
-      ctx.fillStyle = '#fff'
-      ctx.font = 'bold 13px sans-serif'
-      ctx.textBaseline = 'middle'
-      drawMolBubble(ctx, inX, cy - 30, '#ffd066', 'C₆H₁₂O₆')
-      drawMolBubble(ctx, inX, cy + 30, '#ff7788', 'O₂')
-
-      // Flèches entrantes
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)'
-      ctx.lineWidth = 1.5
-      ctx.beginPath(); ctx.moveTo(inX + 30, cy - 30); ctx.lineTo(cx - mitoW / 2 + 8, cy - 30); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(inX + 30, cy + 30); ctx.lineTo(cx - mitoW / 2 + 8, cy + 30); ctx.stroke()
-
-      // Sorties (droite)
-      const outX = cx + mitoW / 2 + 60
-      drawMolBubble(ctx, outX, cy - 30, '#88c8ff', 'H₂O')
-      drawMolBubble(ctx, outX, cy + 30, '#ff8866', 'CO₂')
-
-      ctx.beginPath(); ctx.moveTo(cx + mitoW / 2 - 8, cy - 30); ctx.lineTo(outX - 30, cy - 30); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(cx + mitoW / 2 - 8, cy + 30); ctx.lineTo(outX - 30, cy + 30); ctx.stroke()
-
-      // ATP qui sort (en haut, pulsation)
-      const atpPhase = (t % 2) / 2
-      const atpY = cy - mitoH / 2 - 10 - atpPhase * 20
-      const atpAlpha = 1 - atpPhase
-      ctx.fillStyle = `rgba(255, 220, 80, ${atpAlpha})`
-      ctx.beginPath(); ctx.arc(cx, atpY, 12, 0, Math.PI * 2); ctx.fill()
-      ctx.fillStyle = `rgba(0, 0, 0, ${atpAlpha})`
-      ctx.font = 'bold 10px sans-serif'
-      ctx.fillText('ATP', cx, atpY)
-
-      ctx.fillStyle = 'rgba(255, 220, 80, 0.6)'
-      ctx.font = 'bold 12px sans-serif'
-      ctx.fillText('~ 38 ATP par glucose', cx, cy - mitoH / 2 - 36)
-
-      // Légende
-      ctx.fillStyle = '#fff'
-      ctx.font = 'bold 16px sans-serif'
-      ctx.textBaseline = 'middle'
-      ctx.fillText('C₆H₁₂O₆ + 6 O₂  →  6 CO₂ + 6 H₂O + énergie', cx, h - 50)
-      ctx.fillStyle = 'rgba(255,255,255,0.5)'
-      ctx.font = '12px sans-serif'
-      ctx.fillText('Même bilan que la combustion, mais ~30 étapes enzymatiques contrôlées', cx, h - 25)
-      ctx.textAlign = 'start'
-      ctx.textBaseline = 'alphabetic'
     }
-  }), [])
+  }, [])
 
   return <div className="stage"><canvas ref={canvasRef} /></div>
 }

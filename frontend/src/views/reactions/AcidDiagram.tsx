@@ -1,61 +1,92 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
-// Schéma : HCl s'ionise dans l'eau, produit H3O+ et Cl-
+// Schéma : HCl s'ionise dans l'eau, produit H3O+ et Cl-.
+// Compte les molécules ionisées; à MAX_CYCLES la solution est "saturée".
 export default function AcidDiagram() {
-  const canvasRef = useCanvas(() => ({
-    draw: (ctx, w, h, _dt, t) => {
-      const cy = h / 2 - 30
-      const phase = (t % 4) / 4
-      const reactX = w * 0.22
-      const arrowX = w / 2
-      const productX = w * 0.78
+  const canvasRef = useCanvas(() => {
+    const MAX_CYCLES = 4
+    const PERIOD = 4
+    let cycle = 1
+    let frozen = false
+    let frozenT = 0
+    return {
+      draw: (ctx, w, h, _dt, t) => {
+        if (!frozen) {
+          const c = Math.min(MAX_CYCLES, Math.floor(t / PERIOD) + 1)
+          if (c !== cycle) cycle = c
+          if (cycle >= MAX_CYCLES && (t % PERIOD) / PERIOD > 0.95) {
+            frozen = true
+            frozenT = t
+          }
+        }
+        const animT = frozen ? frozenT : t
+        const cy = h / 2 - 30
+        const phase = (animT % PERIOD) / PERIOD
+        const reactX = w * 0.22
+        const arrowX = w / 2
+        const productX = w * 0.78
 
-      // Réactifs : HCl + H2O
-      const opacityIn = 1 - Math.max(0, (phase - 0.4) / 0.5)
-      ctx.globalAlpha = opacityIn
-      drawMol(ctx, reactX, cy - 30, 'HCl', '#caff1a')
-      drawMol(ctx, reactX, cy + 30, 'H₂O', '#66c8ff')
-      ctx.globalAlpha = 1
+        // Réactifs : HCl + H2O
+        const opacityIn = 1 - Math.max(0, (phase - 0.4) / 0.5)
+        ctx.globalAlpha = opacityIn
+        drawMol(ctx, reactX, cy - 30, 'HCl', '#caff1a')
+        drawMol(ctx, reactX, cy + 30, 'H₂O', '#66c8ff')
+        ctx.globalAlpha = 1
 
-      // Flèche
-      ctx.strokeStyle = '#fff'
-      ctx.lineWidth = 2
-      ctx.beginPath(); ctx.moveTo(arrowX - 45, cy); ctx.lineTo(arrowX + 45, cy); ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(arrowX + 45, cy); ctx.lineTo(arrowX + 35, cy - 6)
-      ctx.moveTo(arrowX + 45, cy); ctx.lineTo(arrowX + 35, cy + 6)
-      ctx.stroke()
+        // Flèche
+        ctx.strokeStyle = '#fff'
+        ctx.lineWidth = 2
+        ctx.beginPath(); ctx.moveTo(arrowX - 45, cy); ctx.lineTo(arrowX + 45, cy); ctx.stroke()
+        ctx.beginPath()
+        ctx.moveTo(arrowX + 45, cy); ctx.lineTo(arrowX + 35, cy - 6)
+        ctx.moveTo(arrowX + 45, cy); ctx.lineTo(arrowX + 35, cy + 6)
+        ctx.stroke()
 
-      // Produits : H3O+ et Cl-
-      const opacityOut = Math.max(0, (phase - 0.3) / 0.5)
-      ctx.globalAlpha = opacityOut
-      drawIon(ctx, productX - 35, cy - 30, 'H₃O', '+', '#ff7777')
-      drawIon(ctx, productX + 35, cy + 30, 'Cl', '-', '#7fffaa')
-      ctx.globalAlpha = 1
+        // Produits : H3O+ et Cl-
+        const opacityOut = Math.max(0, (phase - 0.3) / 0.5)
+        ctx.globalAlpha = opacityOut
+        drawIon(ctx, productX - 35, cy - 30, 'H₃O', '+', '#ff7777')
+        drawIon(ctx, productX + 35, cy + 30, 'Cl', '-', '#7fffaa')
+        ctx.globalAlpha = 1
 
-      // H+ qui voyage de HCl vers H2O (animation centrale)
-      if (phase > 0.2 && phase < 0.6) {
-        const k = (phase - 0.2) / 0.4
-        const hx = reactX + (productX - 35 - reactX) * k
-        const hy = cy - 30 + (cy + 30 - (cy - 30)) * Math.sin(k * Math.PI) * 0.5
-        ctx.fillStyle = 'rgba(255, 200, 80, 0.8)'
-        ctx.font = 'bold 14px sans-serif'
+        // H+ qui voyage de HCl vers H2O (animation centrale)
+        if (phase > 0.2 && phase < 0.6) {
+          const k = (phase - 0.2) / 0.4
+          const hx = reactX + (productX - 35 - reactX) * k
+          const hy = cy - 30 + (cy + 30 - (cy - 30)) * Math.sin(k * Math.PI) * 0.5
+          ctx.fillStyle = 'rgba(255, 200, 80, 0.8)'
+          ctx.font = 'bold 14px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.fillText('H⁺', hx, hy)
+          ctx.textAlign = 'start'
+        }
+
+        // Légende + cycle
+        drawLegend(ctx, 10, 10, [
+          { color: '#caff1a', label: 'HCl (acide non dissocié)' },
+          { color: '#66c8ff', label: 'H₂O (solvant accepteur)' },
+          { color: '#ff7777', label: 'H₃O⁺ (acide conjugué)' },
+          { color: '#7fffaa', label: 'Cl⁻ (base conjuguée)' },
+          { color: '#ffc850', label: 'H⁺ (proton transféré)' },
+        ])
+        drawCycleCounter(ctx, w - 10, h - 70, cycle, MAX_CYCLES, 'Ionisation')
+
+        ctx.fillStyle = '#fff'
+        ctx.font = 'bold 16px sans-serif'
         ctx.textAlign = 'center'
-        ctx.fillText('H⁺', hx, hy)
+        ctx.fillText('HCl + H₂O  ->  H₃O⁺ + Cl⁻', w / 2, h - 50)
+        ctx.fillStyle = frozen ? '#ffcc44' : 'rgba(255,255,255,0.5)'
+        ctx.font = '12px sans-serif'
+        ctx.fillText(
+          frozen
+            ? `Acide entièrement dissocié (${MAX_CYCLES} molécules ionisées)`
+            : 'Ionisation totale d\'un acide fort (Brønsted : donneur de H⁺)',
+          w / 2, h - 25)
         ctx.textAlign = 'start'
       }
-
-      // Légende
-      ctx.fillStyle = '#fff'
-      ctx.font = 'bold 16px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('HCl + H₂O  →  H₃O⁺ + Cl⁻', w / 2, h - 50)
-      ctx.fillStyle = 'rgba(255,255,255,0.5)'
-      ctx.font = '12px sans-serif'
-      ctx.fillText('Ionisation totale d\'un acide fort (Brønsted : donneur de H⁺)', w / 2, h - 25)
-      ctx.textAlign = 'start'
     }
-  }), [])
+  }, [])
 
   return <div className="stage"><canvas ref={canvasRef} /></div>
 }

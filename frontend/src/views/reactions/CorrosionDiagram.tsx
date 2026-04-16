@@ -1,4 +1,5 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
 // Plaque de fer avec gouttes d'eau qui tombent : la rouille s'étend depuis
 // chaque goutte sous forme de tache irrégulière qui croît avec le temps.
@@ -11,7 +12,10 @@ export default function CorrosionDiagram() {
     let blobs: RustBlob[] = []
     let nextDrop = 0
     let cycleTime = 0
+    let cycle = 1
     const CYCLE = 14  // s, durée d'un cycle complet
+    const MAX_CYCLES = 3  // 3 averses puis stabilisation à l'état rouillé
+    let stabilized = false
     let W = 0, H = 0
     let plateY = 0, plateH = 0, plateLeft = 0, plateRight = 0
 
@@ -49,8 +53,17 @@ export default function CorrosionDiagram() {
       onResize: build,
       draw: (ctx, w, h, dt, t) => {
         if (W !== w || H !== h) build(w, h)
-        cycleTime += dt
-        if (cycleTime > CYCLE) reset()
+        if (!stabilized) {
+          cycleTime += dt
+          if (cycleTime > CYCLE) {
+            if (cycle >= MAX_CYCLES) {
+              stabilized = true
+            } else {
+              cycle += 1
+              reset()
+            }
+          }
+        }
 
         // Étiquettes O2 et H2O dans l'air
         ctx.fillStyle = 'rgba(255, 107, 119, 0.4)'
@@ -165,12 +178,25 @@ export default function CorrosionDiagram() {
         ctx.fillText(`Corrosion en cours · ${Math.floor(cycleTime / CYCLE * 100)}%`, w / 2, by - 6)
 
         // Légende
+        drawLegend(ctx, 10, 10, [
+          { color: '#737a8a', label: 'Fe (plaque de fer)', shape: 'square' },
+          { color: '#66c8ff', label: 'H₂O (gouttes d\'eau)' },
+          { color: '#ff6b77', label: 'O₂ (oxygène ambiant)' },
+          { color: '#a04a20', label: 'Fe₂O₃·xH₂O (rouille)', shape: 'square' },
+        ])
+        drawCycleCounter(ctx, w - 10, h - 70, cycle, MAX_CYCLES, 'Averse')
+
         ctx.fillStyle = '#fff'
         ctx.font = 'bold 16px sans-serif'
+        ctx.textAlign = 'center'
         ctx.fillText('4 Fe + 3 O₂ + x H₂O  ->  2 Fe₂O₃·x H₂O  (rouille)', w / 2, h - 50)
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'
+        ctx.fillStyle = stabilized ? '#ffcc44' : 'rgba(255,255,255,0.5)'
         ctx.font = '11px sans-serif'
-        ctx.fillText('Chaque goutte d\'eau initie une tache de rouille qui s\'étend - volume 6× le fer initial', w / 2, h - 28)
+        ctx.fillText(
+          stabilized
+            ? 'Plaque entièrement oxydée - réaction stabilisée'
+            : 'Chaque goutte d\'eau initie une tache de rouille qui s\'étend - volume 6× le fer initial',
+          w / 2, h - 28)
         ctx.textAlign = 'start'
       }
     }

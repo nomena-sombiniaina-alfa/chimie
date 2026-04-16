@@ -1,8 +1,9 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
 // Brûleur de gaz : flamme vive avec particules CH4/O2 qui entrent par le bas,
 // flammes qui montent, particules CO2/H2O qui s'échappent par le haut.
-// Thermomètre à droite qui chauffe en temps réel.
+// Thermomètre à droite qui chauffe puis se stabilise. Reset après 8 s à T max.
 export default function CombustionDiagram() {
   const canvasRef = useCanvas(() => {
     type Particle = { x: number; y: number; vx: number; vy: number; age: number; life: number; kind: 'reactant' | 'product' | 'flame' | 'spark'; label?: string; color?: string; size: number }
@@ -10,6 +11,8 @@ export default function CombustionDiagram() {
     let nextReactant = 0
     let nextFlame = 0
     let temperature = 22  // °C, monte avec le temps
+    let cycle = 1
+    let timeAtMax = 0
     let W = 0, H = 0
 
     return {
@@ -175,9 +178,19 @@ export default function CombustionDiagram() {
         ctx.textAlign = 'start'
         ctx.textBaseline = 'alphabetic'
 
-        // Thermomètre à droite qui monte
-        temperature += dt * 80
-        if (temperature > 1200) temperature = 1200
+        // Thermomètre à droite qui monte puis se stabilise puis reset
+        if (temperature < 1200) {
+          temperature += dt * 80
+          if (temperature >= 1200) temperature = 1200
+        } else {
+          timeAtMax += dt
+          if (timeAtMax > 6) {
+            temperature = 22
+            timeAtMax = 0
+            cycle += 1
+            parts = []
+          }
+        }
         const thX = w - 60
         const thTop = h * 0.20, thBot = h * 0.72
         const thH = thBot - thTop
@@ -203,9 +216,20 @@ export default function CombustionDiagram() {
         ctx.textAlign = 'center'
         ctx.fillText(`${Math.round(temperature)} °C`, thX, thTop - 12)
 
-        // Légende
+        // Légende + cycle
+        drawLegend(ctx, 10, 10, [
+          { color: '#2a2f3a', label: 'CH₄ (méthane, réactif)' },
+          { color: '#ff6677', label: 'O₂ (dioxygène, réactif)' },
+          { color: '#ff7788', label: 'CO₂ (produit)' },
+          { color: '#66c8ff', label: 'H₂O (produit)' },
+          { color: '#ff8a40', label: 'Flamme (chaleur + lumière)', shape: 'flame' },
+        ])
+        drawCycleCounter(ctx, w - 10, h - 70, cycle, undefined, 'Allumage nº')
+
+        // Équation
         ctx.fillStyle = '#fff'
         ctx.font = 'bold 16px sans-serif'
+        ctx.textAlign = 'center'
         ctx.fillText('CH₄ + 2 O₂  ->  CO₂ + 2 H₂O  +  énergie', w / 2, h - 50)
         ctx.fillStyle = 'rgba(255,255,255,0.5)'
         ctx.font = '11px sans-serif'

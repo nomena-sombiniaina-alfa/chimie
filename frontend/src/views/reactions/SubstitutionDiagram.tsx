@@ -1,4 +1,5 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
 // Morceau de zinc qui s'amenuise réellement dans l'acide. Les bulles d'H2
 // jaillissent du métal, montent à la surface et éclatent. Le zinc rétrécit
@@ -9,6 +10,10 @@ export default function SubstitutionDiagram() {
     let bubbles: Bubble[] = []
     let nextBubble = 0
     let znSize = 1.0    // 1 = entier, 0 = disparu
+    let cycle = 1
+    const MAX_CYCLES = 3
+    let consumed = false
+    let pauseAfter = 0
     let W = 0, H = 0
     let beakerTop = 0, beakerBot = 0, beakerLeft = 0, beakerRight = 0
     let waterTop = 0
@@ -29,11 +34,26 @@ export default function SubstitutionDiagram() {
       draw: (ctx, w, h, dt, t) => {
         if (W !== w || H !== h) build(w, h)
 
-        // Cycle : zinc rétrécit. Toutes les 12 s : reset à 1.0
-        znSize -= dt * (1 / 12)
-        if (znSize <= 0.05) {
-          znSize = 1.0
-          bubbles = []
+        // Cycle : zinc rétrécit. À épuisement on relance MAX_CYCLES fois.
+        if (!consumed) {
+          znSize -= dt * (1 / 12)
+          if (znSize <= 0.05) {
+            znSize = 0.05
+            consumed = true
+            pauseAfter = 0
+          }
+        } else {
+          pauseAfter += dt
+          if (pauseAfter > 2.5) {
+            if (cycle < MAX_CYCLES) {
+              cycle += 1
+              znSize = 1.0
+              bubbles = []
+              consumed = false
+              pauseAfter = 0
+            }
+            // sinon : reste épuisé en permanence (3 cycles atteints)
+          }
         }
 
         // Bécher
@@ -177,13 +197,26 @@ export default function SubstitutionDiagram() {
         ctx.fillText(`H₂ libéré : ${bubbles.length} bulles`, beakerRight - 6, beakerTop - 8)
 
         // Légende
+        drawLegend(ctx, 10, 10, [
+          { color: '#9aa1b3', label: 'Zn (métal qui s\'effrite)', shape: 'square' },
+          { color: '#ff6b6b', label: 'H⁺ (acide en solution)' },
+          { color: '#7fffaa', label: 'Cl⁻ (anion spectateur)' },
+          { color: '#dde2eb', label: 'Zn²⁺ (libéré en solution)' },
+          { color: '#dcf0ff', label: 'H₂ (gaz qui s\'échappe)', shape: 'bubble' },
+        ])
+        drawCycleCounter(ctx, w - 10, h - 70, cycle, MAX_CYCLES, 'Morceau')
+
         ctx.fillStyle = '#fff'
         ctx.font = 'bold 16px sans-serif'
         ctx.textAlign = 'center'
         ctx.fillText('Zn + 2 HCl  ->  ZnCl₂ + H₂ ↑', w / 2, h - 50)
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'
+        ctx.fillStyle = consumed && cycle >= MAX_CYCLES ? '#ffcc44' : 'rgba(255,255,255,0.5)'
         ctx.font = '11px sans-serif'
-        ctx.fillText('Le zinc cède 2 e⁻ et passe en solution. Les H⁺ captent les e⁻ et s\'échappent en H₂ gazeux.', w / 2, h - 28)
+        ctx.fillText(
+          consumed && cycle >= MAX_CYCLES
+            ? 'Tout le zinc disponible a été consommé - réaction terminée'
+            : 'Le zinc cède 2 e⁻ et passe en solution. Les H⁺ captent les e⁻ et s\'échappent en H₂ gazeux.',
+          w / 2, h - 28)
         ctx.textAlign = 'start'
         ctx.textBaseline = 'alphabetic'
       }

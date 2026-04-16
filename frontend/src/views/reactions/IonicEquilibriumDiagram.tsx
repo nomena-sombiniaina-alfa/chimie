@@ -1,7 +1,9 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
-// Schéma : équilibre dynamique H2O ⇌ H+ + OH-
-// Particules qui se dissocient et se recombinent en permanence.
+// Schéma : équilibre dynamique H2O ⇌ H+ + OH-.
+// Compte les dissociations; quand un seuil est atteint le système stabilise
+// (autant de dissociations que de recombinaisons par seconde).
 export default function IonicEquilibriumDiagram() {
   const canvasRef = useCanvas(() => {
     type Particle = { x: number; y: number; vx: number; vy: number; kind: 'h2o' | 'h' | 'oh' }
@@ -10,6 +12,9 @@ export default function IonicEquilibriumDiagram() {
     let initialized = false
     let dissocTimer = 0
     let recombTimer = 0
+    let dissocCount = 0
+    const MAX_DISSOC = 8
+    let equilibrium = false
 
     function build(w: number, h: number) {
       W = w; H = h
@@ -46,8 +51,12 @@ export default function IonicEquilibriumDiagram() {
         }
 
         // Dissociation occasionnelle (H2O -> H+ + OH-)
+        // En équilibre : on dissocie uniquement si moins d'ions présents
+        // (autant de fwd que de bwd, le compteur n'augmente plus)
         dissocTimer += dt
-        if (dissocTimer > 1.2) {
+        const ionCount = parts.filter(p => p.kind !== 'h2o').length
+        const allowDissoc = !equilibrium || ionCount < 4
+        if (dissocTimer > 1.2 && allowDissoc) {
           dissocTimer = 0
           const candidates = parts.filter(p => p.kind === 'h2o')
           if (candidates.length > 0) {
@@ -58,6 +67,10 @@ export default function IonicEquilibriumDiagram() {
               vx: -p.vx * 0.5, vy: -p.vy * 0.5,
               kind: 'oh',
             })
+            if (!equilibrium) {
+              dissocCount += 1
+              if (dissocCount >= MAX_DISSOC) equilibrium = true
+            }
           }
         }
 
@@ -109,27 +122,38 @@ export default function IonicEquilibriumDiagram() {
           }
         }
 
-        // Compteurs
+        // Compteurs (en haut à droite pour ne pas chevaucher la légende)
         const cH2O = parts.filter(p => p.kind === 'h2o').length
         const cH = parts.filter(p => p.kind === 'h').length
         const cOH = parts.filter(p => p.kind === 'oh').length
         ctx.fillStyle = 'rgba(255,255,255,0.6)'
         ctx.font = '12px sans-serif'
-        ctx.textAlign = 'left'
+        ctx.textAlign = 'right'
         ctx.textBaseline = 'top'
-        ctx.fillText(`H₂O : ${cH2O}`, 20, 20)
-        ctx.fillText(`H⁺ : ${cH}`, 20, 36)
-        ctx.fillText(`OH⁻ : ${cOH}`, 20, 52)
+        ctx.fillText(`H₂O : ${cH2O}`, w - 20, 20)
+        ctx.fillText(`H⁺ : ${cH}`, w - 20, 36)
+        ctx.fillText(`OH⁻ : ${cOH}`, w - 20, 52)
 
-        // Légende
+        // Légende + compteur
+        drawLegend(ctx, 10, 10, [
+          { color: '#66c8ff', label: 'H₂O (eau, forme neutre)' },
+          { color: '#ff7777', label: 'H⁺ (proton libéré)' },
+          { color: '#7fffaa', label: 'OH⁻ (ion hydroxyde)' },
+        ])
+        drawCycleCounter(ctx, w - 10, h - 70, dissocCount, MAX_DISSOC, 'Dissociation')
+
         ctx.fillStyle = '#fff'
         ctx.font = 'bold 16px sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         ctx.fillText('H₂O  ⇌  H⁺ + OH⁻   (Kw = 10⁻¹⁴ à 25 °C)', w / 2, h - 50)
-        ctx.fillStyle = 'rgba(255,255,255,0.5)'
+        ctx.fillStyle = equilibrium ? '#7fffaa' : 'rgba(255,255,255,0.5)'
         ctx.font = '12px sans-serif'
-        ctx.fillText('Équilibre dynamique : dissociations et recombinaisons constantes - concentrations stables', w / 2, h - 25)
+        ctx.fillText(
+          equilibrium
+            ? 'Équilibre atteint - autant de dissociations que de recombinaisons'
+            : 'Équilibre dynamique : dissociations et recombinaisons constantes - concentrations stables',
+          w / 2, h - 25)
         ctx.textAlign = 'start'
         ctx.textBaseline = 'alphabetic'
       }

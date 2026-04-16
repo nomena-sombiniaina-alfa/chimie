@@ -1,11 +1,28 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
 // Schéma : C2H4 + H2 -> C2H6. Double liaison s'ouvre pour fixer H2.
+// Compte les hydrogénations; figé à MAX_CYCLES.
 export default function AdditionDiagram() {
-  const canvasRef = useCanvas(() => ({
+  const canvasRef = useCanvas(() => {
+    const MAX_CYCLES = 4
+    const PERIOD = 4
+    let cycle = 1
+    let frozen = false
+    let frozenT = 0
+    return {
     draw: (ctx, w, h, _dt, t) => {
+      if (!frozen) {
+        const c = Math.min(MAX_CYCLES, Math.floor(t / PERIOD) + 1)
+        if (c !== cycle) cycle = c
+        if (cycle >= MAX_CYCLES && (t % PERIOD) / PERIOD > 0.95) {
+          frozen = true
+          frozenT = t
+        }
+      }
+      const animT = frozen ? frozenT : t
       const cy = h / 2 - 30
-      const phase = (t % 4) / 4
+      const phase = (animT % PERIOD) / PERIOD
 
       // Réactif gauche : éthène C2H4
       const leftCx = w * 0.25
@@ -83,16 +100,30 @@ export default function AdditionDiagram() {
       ctx.fillText('C₂H₆ (éthane)', rightCx, cy + 50)
       ctx.globalAlpha = 1
 
-      // Légende
+      // Légende + cycle
+      drawLegend(ctx, 10, 10, [
+        { color: '#a0a0a0', label: 'C (carbone, squelette)' },
+        { color: '#dfe6f5', label: 'H (hydrogène existant)' },
+        { color: '#7fffaa', label: 'H ajouté (double -> simple)' },
+        { color: '#ffcc44', label: 'Catalyseur Ni/Pt' },
+      ])
+      drawCycleCounter(ctx, w - 10, h - 70, cycle, MAX_CYCLES, 'Hydrogénation')
+
       ctx.fillStyle = '#fff'
       ctx.font = 'bold 16px sans-serif'
-      ctx.fillText('C₂H₄ + H₂  →  C₂H₆   (hydrogénation)', w / 2, h - 50)
-      ctx.fillStyle = 'rgba(255,255,255,0.5)'
+      ctx.textAlign = 'center'
+      ctx.fillText('C₂H₄ + H₂  ->  C₂H₆   (hydrogénation)', w / 2, h - 50)
+      ctx.fillStyle = frozen ? '#ffcc44' : 'rgba(255,255,255,0.5)'
       ctx.font = '12px sans-serif'
-      ctx.fillText('La double liaison s\'ouvre, deux H se fixent - économie atomique 100 %', w / 2, h - 25)
+      ctx.fillText(
+        frozen
+          ? `Lot saturé (${MAX_CYCLES} molécules hydrogénées) - graisse trans obtenue`
+          : 'La double liaison s\'ouvre, deux H se fixent - économie atomique 100 %',
+        w / 2, h - 25)
       ctx.textAlign = 'start'
     }
-  }), [])
+    }
+  }, [])
 
   return <div className="stage"><canvas ref={canvasRef} /></div>
 }

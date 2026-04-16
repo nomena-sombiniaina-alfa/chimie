@@ -1,7 +1,9 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
 // Scénario saturation : on continue d'ajouter du sel dans une solution déjà
 // très concentrée. Une partie se dissout, le reste cristallise au fond.
+// On arrête après MAX_SETTLED amas tombés, puis on relance.
 export default function PrecipitationDiagram() {
   const canvasRef = useCanvas(() => {
     type Ion = { x: number; y: number; vx: number; vy: number; kind: '+' | '-' }
@@ -9,6 +11,8 @@ export default function PrecipitationDiagram() {
     let ions: Ion[] = []
     let crystals: Crystal[] = []
     let nextDrop = 0
+    let cycle = 1
+    let pauseAfterFull = 0
     let W = 0, H = 0
     let beakerTop = 0, beakerBot = 0, beakerLeft = 0, beakerRight = 0
     let waterTop = 0
@@ -16,6 +20,7 @@ export default function PrecipitationDiagram() {
     const SAT = 70                // seuil de saturation en ions
     const DROP_INTERVAL = 1.6     // s entre deux ajouts de cristal
     const ION_PER_CRYSTAL = 10
+    const MAX_SETTLED = 4         // arrêt après 4 amas au fond
 
     function build(w: number, h: number) {
       W = w; H = h
@@ -101,11 +106,22 @@ export default function PrecipitationDiagram() {
         ctx.textBaseline = 'middle'
         ctx.fillText('NaCl', shakerX, shakerY + 18)
 
-        // Spawn périodique de cristaux
-        nextDrop += dt
-        if (nextDrop > DROP_INTERVAL) {
-          nextDrop = 0
-          dropCrystal()
+        // Compteur d'amas au fond + arrêt/reset
+        const settledCountNow = crystals.filter(c => c.settled).length
+        if (settledCountNow >= MAX_SETTLED) {
+          pauseAfterFull += dt
+          if (pauseAfterFull > 2.5) {
+            build(w, h)
+            cycle += 1
+            pauseAfterFull = 0
+          }
+        } else {
+          // Spawn périodique de cristaux uniquement tant que la limite n'est pas atteinte
+          nextDrop += dt
+          if (nextDrop > DROP_INTERVAL) {
+            nextDrop = 0
+            dropCrystal()
+          }
         }
 
         // Mouvement des ions
@@ -197,14 +213,26 @@ export default function PrecipitationDiagram() {
         ctx.font = '10px sans-serif'
         ctx.fillText(`${Math.round(conc * 100)} %`, gaugeX + gaugeW + 6, gaugeY + gaugeH - 4)
 
+        // Légende + compteur de cycle (en haut, hors du bécher)
+        drawLegend(ctx, 10, 10, [
+          { color: '#ff8a8a', label: 'Na⁺ (cation dissous)' },
+          { color: '#7fffaa', label: 'Cl⁻ (anion dissous)' },
+          { color: '#cccccc', label: 'NaCl (cristal solide)', shape: 'block' },
+          { color: '#aab4c5', label: 'Salière (ajout continu)', shape: 'square' },
+        ])
+        drawCycleCounter(ctx, w - 10, h - 70, cycle, undefined, 'Expérience nº')
+
         // Statut bas
         const settledCount = crystals.filter(c => c.settled).length
-        const status = conc >= 1
-          ? `Solution saturée : le sel ajouté cristallise au fond (${settledCount} amas)`
-          : `Solution sous-saturée : le sel se dissout encore (${ions.length}/${SAT} ions)`
-        ctx.fillStyle = conc >= 1 ? '#ff9999' : '#7fffaa'
+        const status = settledCount >= MAX_SETTLED
+          ? `Limite atteinte : ${MAX_SETTLED} amas formés - réinitialisation imminente`
+          : conc >= 1
+            ? `Solution saturée : le sel ajouté cristallise au fond (${settledCount}/${MAX_SETTLED} amas)`
+            : `Solution sous-saturée : le sel se dissout encore (${ions.length}/${SAT} ions)`
+        ctx.fillStyle = settledCount >= MAX_SETTLED ? '#ffcc44' : conc >= 1 ? '#ff9999' : '#7fffaa'
         ctx.font = 'bold 12px sans-serif'
         ctx.textAlign = 'center'
+        ctx.textBaseline = 'alphabetic'
         ctx.fillText(status, w / 2, h - 50)
         ctx.fillStyle = 'rgba(255,255,255,0.5)'
         ctx.font = '11px sans-serif'

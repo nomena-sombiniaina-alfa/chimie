@@ -1,8 +1,9 @@
 import { useCanvas } from '../../hooks/useCanvas'
+import { drawLegend, drawCycleCounter } from './_legend'
 
-// Cristal de NaCl posé au fond d'un bécher. Les molécules d'eau attaquent les
-// arêtes : les ions se détachent un par un et s'éloignent, entourés de leur
-// sphère d'hydratation. Le cristal rétrécit visiblement.
+// Cristal de NaCl posé dans l'eau. Les molécules d'eau attaquent les arêtes :
+// les ions se détachent un par un, entourés de leur sphère d'hydratation.
+// Quand tout est dissout, pause puis on rebuild un nouveau cristal.
 export default function DissolutionDiagram() {
   const canvasRef = useCanvas(() => {
     type Lattice = { i: number; j: number; kind: '+' | '-'; released: boolean }
@@ -17,6 +18,8 @@ export default function DissolutionDiagram() {
     const cellSize = 14
     let nextRelease = 0
     let elapsed = 0
+    let cycle = 1
+    let pauseAfterEmpty = 0
 
     function build(w: number, h: number) {
       W = w; H = h
@@ -104,11 +107,21 @@ export default function DissolutionDiagram() {
           ctx.beginPath(); ctx.arc(wx + 4, wy + 4, 2, 0, Math.PI * 2); ctx.fill()
         }
 
-        // Libération périodique d'un ion de bord
-        nextRelease += dt
-        if (nextRelease > 0.4 && lattice.some(l => !l.released)) {
-          nextRelease = 0
-          releaseEdgeIon()
+        // Libération périodique d'un ion de bord, jusqu'à épuisement
+        const remaining = lattice.filter(l => !l.released).length
+        if (remaining === 0) {
+          pauseAfterEmpty += dt
+          if (pauseAfterEmpty > 2.5) {
+            build(w, h)
+            cycle += 1
+            pauseAfterEmpty = 0
+          }
+        } else {
+          nextRelease += dt
+          if (nextRelease > 0.4) {
+            nextRelease = 0
+            releaseEdgeIon()
+          }
         }
 
         // Cristal restant
@@ -123,7 +136,6 @@ export default function DissolutionDiagram() {
         }
 
         // Étiquette cristal
-        const remaining = lattice.filter(l => !l.released).length
         ctx.fillStyle = 'rgba(255,255,255,0.7)'
         ctx.font = 'bold 11px sans-serif'
         ctx.textAlign = 'center'
@@ -168,7 +180,16 @@ export default function DissolutionDiagram() {
         ctx.textAlign = 'start'
         ctx.textBaseline = 'alphabetic'
 
-        // Légende
+        // Légende des éléments + compteur de cycle
+        drawLegend(ctx, 10, 10, [
+          { color: '#ff8a8a', label: 'Na⁺ dans le réseau', shape: 'square' },
+          { color: '#7fffaa', label: 'Cl⁻ dans le réseau', shape: 'square' },
+          { color: '#ff6b6b', label: 'Na⁺ solvaté' },
+          { color: '#66c8ff', label: "Molécule H₂O" },
+        ])
+        drawCycleCounter(ctx, w - 10, h - 70, cycle, undefined, 'Dissolution nº')
+
+        // Équation + texte
         ctx.fillStyle = '#fff'
         ctx.font = 'bold 16px sans-serif'
         ctx.textAlign = 'center'
