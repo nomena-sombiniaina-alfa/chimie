@@ -63,6 +63,53 @@
   text-overflow: ellipsis;
 }
 
+/* Sous-onglets (variantes fort/faible pour acide-base) */
+.rx-subtabs {
+  margin-top: 8px;
+  padding: 8px 10px 10px;
+  background: rgba(0, 212, 255, 0.04);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+.rs-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.rs-tabs {
+  display: flex;
+  gap: 6px;
+}
+.rs-tab {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.rs-tab:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.rs-tab.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.18), rgba(255,85,119,0.10));
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.rd-card.rd-theory {
+  background: linear-gradient(135deg, rgba(0,212,255,0.07), rgba(255,85,119,0.04));
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
 /* ───── Détail ───── */
 .rx-detail {
   background: var(--bg-1);

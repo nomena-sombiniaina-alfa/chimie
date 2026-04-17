@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useReactionsStore } from '../store/reactionsStore'
 import CorrosionDiagram from '../views/reactions/CorrosionDiagram'
 import CombustionDiagram from '../views/reactions/CombustionDiagram'
@@ -22,21 +22,24 @@ const CATEGORIES = [
   { id: 'solids',    label: "D. Formation / rupture de solides",     hint: 'précipitation · dissolution · équilibre ionique' },
 ]
 
-const DIAGRAMS: Record<string, React.FC> = {
-  // A. REDOX
+type AcidBaseMode = 'strong' | 'weak'
+
+const ACID_BASE_SLUGS = new Set(['acids', 'bases', 'neutralization'])
+
+type AcidBaseProps = { mode: AcidBaseMode }
+const ACID_BASE_DIAGRAMS: Record<string, React.FC<AcidBaseProps>> = {
+  'acids':          AcidDiagram,
+  'bases':          BaseDiagram,
+  'neutralization': AcidBaseDiagram,
+}
+const PLAIN_DIAGRAMS: Record<string, React.FC> = {
   'corrosion':         CorrosionDiagram,
   'combustion':        CombustionDiagram,
   'batteries':         BatteryDiagram,
   'respiration':       RespirationDiagram,
-  // B. ACIDE-BASE
-  'acids':             AcidDiagram,
-  'bases':             BaseDiagram,
-  'neutralization':    AcidBaseDiagram,
-  // C. STRUCTURE
   'substitution':      SubstitutionDiagram,
   'addition':          AdditionDiagram,
   'elimination':       EliminationDiagram,
-  // D. SOLIDES
   'precipitation':     PrecipitationDiagram,
   'dissolution':       DissolutionDiagram,
   'ionic-equilibrium': IonicEquilibriumDiagram,
@@ -48,11 +51,51 @@ const ENERGETICS_LABEL: Record<string, { label: string; color: string }> = {
   'athermic':    { label: 'Athermique',    color: '#caff1a' },
 }
 
+// Mini-théorie fort vs faible, adaptée au type sélectionné (acide, base, neutralisation)
+const THEORY_TABS: Record<string, { slug: string; strongLabel: string; weakLabel: string; strong: string; weak: string }> = {
+  acids: {
+    slug: 'acids',
+    strongLabel: 'Acide fort',
+    weakLabel: 'Acide faible',
+    strong:
+      "Un acide fort (HCl, HNO₃, H₂SO₄) se dissocie totalement dans l'eau : chaque molécule cède son H⁺. " +
+      "À l'équilibre, il ne reste aucune molécule intacte. Ka ≫ 1, l'équation s'écrit avec une flèche simple (->).",
+    weak:
+      "Un acide faible (CH₃COOH, HF, NH₄⁺) se dissocie partiellement : seules quelques molécules cèdent leur H⁺, " +
+      "les autres restent intactes en solution. Équilibre dynamique noté ⇌. Ka ≈ 10⁻⁵ pour l'acide acétique - " +
+      "à 0,1 mol/L, ~1 % seulement est ionisé.",
+  },
+  bases: {
+    slug: 'bases',
+    strongLabel: 'Base forte',
+    weakLabel: 'Base faible',
+    strong:
+      "Une base forte (NaOH, KOH, Ca(OH)₂) libère totalement ses OH⁻ en solution. " +
+      "Le solide se dissout complètement, la concentration en OH⁻ est élevée. pH > 13 à 1 mol/L.",
+    weak:
+      "Une base faible (NH₃, amines) accepte un H⁺ de l'eau, mais l'équilibre est très en faveur de la forme neutre. " +
+      "Seules quelques molécules sont protonées : NH₃ + H₂O ⇌ NH₄⁺ + OH⁻. Kb ≈ 1,8·10⁻⁵, ~1 % d'ionisation à 0,1 mol/L.",
+  },
+  neutralization: {
+    slug: 'neutralization',
+    strongLabel: 'Fort + fort',
+    weakLabel: 'Faible + fort',
+    strong:
+      "Acide fort + base forte : tous les H⁺ rencontrent tous les OH⁻, formation totale de H₂O. " +
+      "Le sel résultant (NaCl) est neutre, pH = 7 à l'équivalence. ΔH ≈ -57 kJ/mol.",
+    weak:
+      "Acide faible + base forte (ex. CH₃COOH + NaOH) : la base forte consomme tout l'acide, mais la base conjuguée A⁻ " +
+      "reste en solution et ré-arrache des H⁺ à l'eau. Résultat : pH > 7 à l'équivalence (sel basique, ~ 8-9).",
+  },
+}
+
 export default function ReactionsHub() {
   const {
     reactions, currentDetail, selectedSlug, loaded, error,
     loadAll, selectReaction,
   } = useReactionsStore()
+
+  const [acidBaseMode, setAcidBaseMode] = useState<AcidBaseMode>('strong')
 
   useEffect(() => { if (!loaded) loadAll() }, [loaded, loadAll])
 
@@ -66,7 +109,10 @@ export default function ReactionsHub() {
   if (error)   return <div className="error">Erreur : {error}</div>
   if (!loaded) return <div className="loading">Chargement des réactions…</div>
 
-  const Diagram = currentDetail ? DIAGRAMS[currentDetail.slug] : null
+  const isAcidBase = currentDetail ? ACID_BASE_SLUGS.has(currentDetail.slug) : false
+  const PlainDiagram = currentDetail ? PLAIN_DIAGRAMS[currentDetail.slug] : null
+  const AcidBaseDiagramFC = currentDetail ? ACID_BASE_DIAGRAMS[currentDetail.slug] : null
+  const theory = currentDetail && isAcidBase ? THEORY_TABS[currentDetail.slug] : null
 
   return (
     <div className="reactions">
@@ -90,6 +136,25 @@ export default function ReactionsHub() {
                 </span>
               </button>
             ))}
+            {g.id === 'acid-base' && isAcidBase && theory && (
+              <div className="rx-subtabs">
+                <span className="rs-label">Variante</span>
+                <div className="rs-tabs">
+                  <button
+                    className={`rs-tab ${acidBaseMode === 'strong' ? 'active' : ''}`}
+                    onClick={() => setAcidBaseMode('strong')}
+                  >
+                    {theory.strongLabel}
+                  </button>
+                  <button
+                    className={`rs-tab ${acidBaseMode === 'weak' ? 'active' : ''}`}
+                    onClick={() => setAcidBaseMode('weak')}
+                  >
+                    {theory.weakLabel}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </aside>
@@ -112,9 +177,20 @@ export default function ReactionsHub() {
             )}
           </header>
 
-          {Diagram && (
+          {isAcidBase && AcidBaseDiagramFC ? (
             <section className="rd-diagram">
-              <Diagram />
+              <AcidBaseDiagramFC key={acidBaseMode} mode={acidBaseMode} />
+            </section>
+          ) : PlainDiagram ? (
+            <section className="rd-diagram">
+              <PlainDiagram />
+            </section>
+          ) : null}
+
+          {isAcidBase && theory && (
+            <section className="rd-card rd-theory">
+              <h3>📖 Mini-théorie : {acidBaseMode === 'strong' ? theory.strongLabel : theory.weakLabel}</h3>
+              <p>{acidBaseMode === 'strong' ? theory.strong : theory.weak}</p>
             </section>
           )}
 

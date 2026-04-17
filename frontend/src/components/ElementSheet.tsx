@@ -110,7 +110,7 @@ export default function ElementSheet() {
                           ? (q > 0
                               ? `↑ ${formatEnergy(energy)}`
                               : `↓ ${formatEnergy(Math.abs(energy))}`)
-                          : '— énergie n.d.'}
+                          : '- énergie n.d.'}
                     </span>
                   </button>
                 )
