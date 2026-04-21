@@ -48,18 +48,20 @@ export default function PrecipitationDiagram() {
     function dropCrystal() {
       crystals.push({
         x: beakerLeft + 30 + Math.random() * (beakerRight - beakerLeft - 60),
-        y: beakerTop - 30,
+        y: beakerTop - 36,
         vy: 0,
-        size: 12 + Math.random() * 6,
+        size: 18 + Math.random() * 8,
         settled: false,
         dissolving: 0,
       })
     }
 
     function spawnIonsAt(x: number, y: number, count: number) {
+      // Les ions partent dans toutes les directions avec une vitesse élevée
+      // afin de s'éparpiller dans tout le bécher au lieu de s'agglutiner.
       for (let i = 0; i < count; i++) {
         const a = Math.random() * Math.PI * 2
-        const sp = 60 + Math.random() * 80
+        const sp = 90 + Math.random() * 130
         ions.push({
           x, y,
           vx: Math.cos(a) * sp,
@@ -89,22 +91,23 @@ export default function PrecipitationDiagram() {
         ctx.lineWidth = 1
         ctx.beginPath(); ctx.moveTo(beakerLeft + 1, waterTop); ctx.lineTo(beakerRight - 1, waterTop); ctx.stroke()
 
-        // Salière au-dessus
+        // Salière (taille agrandie)
         const shakerX = (beakerLeft + beakerRight) / 2
-        const shakerY = beakerTop - 60 + Math.sin(t * 1.4) * 3
+        const shakerY = beakerTop - 80 + Math.sin(t * 1.4) * 3
+        const SW = 72, SH = 46
         ctx.fillStyle = '#aab4c5'
-        ctx.fillRect(shakerX - 22, shakerY, 44, 28)
+        ctx.fillRect(shakerX - SW / 2, shakerY, SW, SH)
         ctx.fillStyle = '#6d7484'
-        ctx.fillRect(shakerX - 22, shakerY, 44, 6)
+        ctx.fillRect(shakerX - SW / 2, shakerY, SW, 10)
         ctx.fillStyle = '#0a0e1a'
-        for (let i = -1; i <= 1; i++) {
-          ctx.beginPath(); ctx.arc(shakerX + i * 10, shakerY + 3, 1.6, 0, Math.PI * 2); ctx.fill()
+        for (let i = -2; i <= 2; i++) {
+          ctx.beginPath(); ctx.arc(shakerX + i * 12, shakerY + 5, 2.2, 0, Math.PI * 2); ctx.fill()
         }
         ctx.fillStyle = '#fff'
-        ctx.font = 'bold 8px sans-serif'
+        ctx.font = 'bold 11px sans-serif'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText('NaCl', shakerX, shakerY + 18)
+        ctx.fillText('NaCl', shakerX, shakerY + SH / 2 + 5)
 
         // Compteur d'amas au fond + arrêt/reset
         const settledCountNow = crystals.filter(c => c.settled).length
@@ -124,18 +127,19 @@ export default function PrecipitationDiagram() {
           }
         }
 
-        // Mouvement des ions
+        // Mouvement des ions (brownien plus marqué pour bien s'éparpiller)
+        const ION_R = 6
         for (const ion of ions) {
-          ion.vx += (Math.random() - 0.5) * 50 * dt
-          ion.vy += (Math.random() - 0.5) * 50 * dt
-          ion.vx *= 0.99
-          ion.vy *= 0.99
+          ion.vx += (Math.random() - 0.5) * 100 * dt
+          ion.vy += (Math.random() - 0.5) * 100 * dt
+          ion.vx *= 0.97
+          ion.vy *= 0.97
           ion.x += ion.vx * dt
           ion.y += ion.vy * dt
-          if (ion.x < beakerLeft + 5) { ion.x = beakerLeft + 5; ion.vx *= -0.7 }
-          if (ion.x > beakerRight - 5) { ion.x = beakerRight - 5; ion.vx *= -0.7 }
-          if (ion.y < waterTop + 3) { ion.y = waterTop + 3; ion.vy *= -0.7 }
-          if (ion.y > beakerBot - 4) { ion.y = beakerBot - 4; ion.vy *= -0.7 }
+          if (ion.x < beakerLeft + ION_R + 2) { ion.x = beakerLeft + ION_R + 2; ion.vx *= -0.6 }
+          if (ion.x > beakerRight - ION_R - 2) { ion.x = beakerRight - ION_R - 2; ion.vx *= -0.6 }
+          if (ion.y < waterTop + ION_R) { ion.y = waterTop + ION_R; ion.vy *= -0.6 }
+          if (ion.y > beakerBot - ION_R - 2) { ion.y = beakerBot - ION_R - 2; ion.vy *= -0.6 }
         }
 
         // Cristaux : chute, dissolution ou sédimentation
@@ -164,11 +168,22 @@ export default function PrecipitationDiagram() {
         }
         crystals = crystals.filter(c => c.dissolving < 0.6)
 
-        // Dessiner ions
+        // Dessiner ions (taille agrandie + dégradé)
         for (const ion of ions) {
-          ctx.fillStyle = ion.kind === '+' ? '#ff8a8a' : '#7fffaa'
-          ctx.beginPath(); ctx.arc(ion.x, ion.y, 3.5, 0, Math.PI * 2); ctx.fill()
+          const c = ion.kind === '+' ? '#ff8a8a' : '#7fffaa'
+          const g = ctx.createRadialGradient(ion.x - 2, ion.y - 2, 0, ion.x, ion.y, ION_R)
+          g.addColorStop(0, '#ffffff')
+          g.addColorStop(0.45, c)
+          g.addColorStop(1, c)
+          ctx.fillStyle = g
+          ctx.beginPath(); ctx.arc(ion.x, ion.y, ION_R, 0, Math.PI * 2); ctx.fill()
+          ctx.fillStyle = '#0a0e1a'
+          ctx.font = 'bold 7px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(ion.kind === '+' ? 'Na⁺' : 'Cl⁻', ion.x, ion.y)
         }
+        ctx.textBaseline = 'alphabetic'
 
         // Dessiner cristaux
         for (const c of crystals) {

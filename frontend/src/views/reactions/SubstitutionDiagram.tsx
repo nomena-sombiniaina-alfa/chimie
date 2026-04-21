@@ -17,8 +17,8 @@ export default function SubstitutionDiagram() {
     let W = 0, H = 0
     let beakerTop = 0, beakerBot = 0, beakerLeft = 0, beakerRight = 0
     let waterTop = 0
-    const ZN_INITIAL_W = 90
-    const ZN_INITIAL_H = 30
+    const ZN_INITIAL_W = 120
+    const ZN_INITIAL_H = 42
 
     function build(w: number, h: number) {
       W = w; H = h
@@ -116,21 +116,29 @@ export default function SubstitutionDiagram() {
           ctx.fillText('Zn', cx, cy)
         }
 
-        // Ions Zn²⁺ qui partent du métal (petits glyphes)
-        for (let i = 0; i < 4; i++) {
-          const off = (t * 30 + i * 90) % 120
-          if (off < 100 && zw > 20) {
-            const ix = cx - zw / 2 - 8 - off * 0.3
-            const iy = cy - zh / 4 + (i - 1.5) * 15
-            const fade = 1 - off / 100
-            ctx.fillStyle = `rgba(221, 226, 235, ${fade})`
-            ctx.beginPath(); ctx.arc(ix, iy, 6, 0, Math.PI * 2); ctx.fill()
+        // Ions Zn²⁺ qui partent du métal (glyphes agrandis + dispersés des 2 côtés)
+        for (let i = 0; i < 8; i++) {
+          const off = (t * 25 + i * 60) % 180
+          if (off < 160 && zw > 20) {
+            const side = i % 2 === 0 ? -1 : 1
+            const drift = off / 160
+            const ix = cx + side * (zw / 2 + 12 + drift * 80) + Math.sin(t * 1.5 + i) * 8
+            const iy = cy + (i - 3.5) * 8 + Math.sin(t * 2 + i * 0.7) * 6
+            const fade = 1 - drift
+            const g = ctx.createRadialGradient(ix - 3, iy - 3, 0, ix, iy, 11)
+            g.addColorStop(0, `rgba(255,255,255,${fade})`)
+            g.addColorStop(0.45, `rgba(221, 226, 235, ${fade})`)
+            g.addColorStop(1, `rgba(221, 226, 235, ${fade})`)
+            ctx.fillStyle = g
+            ctx.beginPath(); ctx.arc(ix, iy, 11, 0, Math.PI * 2); ctx.fill()
             ctx.fillStyle = `rgba(0, 0, 0, ${fade})`
-            ctx.font = 'bold 8px sans-serif'
+            ctx.font = 'bold 9px sans-serif'
             ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
             ctx.fillText('Zn²⁺', ix, iy)
           }
         }
+        ctx.textBaseline = 'alphabetic'
 
         // Spawn de bulles depuis le bloc zinc
         nextBubble += dt
@@ -141,9 +149,9 @@ export default function SubstitutionDiagram() {
             bubbles.push({
               x: cx + (Math.random() - 0.5) * zw,
               y: cy - zh / 2 + (Math.random() - 0.5) * zh / 2,
-              r: 2 + Math.random() * 4,
-              vy: 40 + Math.random() * 50,
-              vx: (Math.random() - 0.5) * 15,
+              r: 4 + Math.random() * 6,
+              vy: 50 + Math.random() * 60,
+              vx: (Math.random() - 0.5) * 35,
               surfacing: 0,
             })
           }
@@ -177,9 +185,9 @@ export default function SubstitutionDiagram() {
           ctx.strokeStyle = 'rgba(255,255,255,0.8)'
           ctx.lineWidth = 0.7
           ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke()
-          if (b.r > 4) {
-            ctx.fillStyle = 'rgba(255,255,255,0.9)'
-            ctx.font = 'bold 6px sans-serif'
+          if (b.r > 5) {
+            ctx.fillStyle = 'rgba(255,255,255,0.95)'
+            ctx.font = 'bold 8px sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
             ctx.fillText('H₂', b.x, b.y)

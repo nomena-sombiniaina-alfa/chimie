@@ -96,26 +96,32 @@ export default function IonicEquilibriumDiagram() {
         // Dessin
         for (const p of parts) {
           if (p.kind === 'h2o') {
-            ctx.fillStyle = '#66c8ff'
-            ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, Math.PI * 2); ctx.fill()
+            const g = ctx.createRadialGradient(p.x - 3, p.y - 3, 0, p.x, p.y, 13)
+            g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#66c8ff'); g.addColorStop(1, '#66c8ff')
+            ctx.fillStyle = g
+            ctx.beginPath(); ctx.arc(p.x, p.y, 13, 0, Math.PI * 2); ctx.fill()
             ctx.fillStyle = '#0a0e1a'
-            ctx.font = 'bold 8px sans-serif'
+            ctx.font = 'bold 10px sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
             ctx.fillText('H₂O', p.x, p.y)
           } else if (p.kind === 'h') {
-            ctx.fillStyle = '#ff7777'
-            ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2); ctx.fill()
+            const g = ctx.createRadialGradient(p.x - 3, p.y - 3, 0, p.x, p.y, 11)
+            g.addColorStop(0, '#ffffff'); g.addColorStop(0.45, '#ff7777'); g.addColorStop(1, '#ff7777')
+            ctx.fillStyle = g
+            ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, Math.PI * 2); ctx.fill()
             ctx.fillStyle = '#fff'
-            ctx.font = 'bold 9px sans-serif'
+            ctx.font = 'bold 11px sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
             ctx.fillText('H⁺', p.x, p.y)
           } else if (p.kind === 'oh') {
-            ctx.fillStyle = '#7fffaa'
-            ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2); ctx.fill()
+            const g = ctx.createRadialGradient(p.x - 3, p.y - 3, 0, p.x, p.y, 12)
+            g.addColorStop(0, '#ffffff'); g.addColorStop(0.45, '#7fffaa'); g.addColorStop(1, '#7fffaa')
+            ctx.fillStyle = g
+            ctx.beginPath(); ctx.arc(p.x, p.y, 12, 0, Math.PI * 2); ctx.fill()
             ctx.fillStyle = '#0a0e1a'
-            ctx.font = 'bold 8px sans-serif'
+            ctx.font = 'bold 10px sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
             ctx.fillText('OH⁻', p.x, p.y)

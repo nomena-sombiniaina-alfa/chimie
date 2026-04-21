@@ -2,9 +2,9 @@ import { useCanvas } from '../../hooks/useCanvas'
 import { drawLegend, drawCycleCounter } from './_legend'
 
 // Bécher d'eau dans lequel on ajoute une base.
-//  - mode 'strong' (NaOH) : pastilles tombent, se dissolvent totalement en Na⁺ + OH⁻
-//  - mode 'weak'   (NH₃)  : molécules tombent, ~20 % seulement captent un H⁺ pour former NH₄⁺ + OH⁻
-// Après MAX_CYCLES ajouts, l'état final est figé.
+//  - mode 'strong' (NaOH) : pastilles tombent depuis une grande salière, se dissolvent totalement.
+//  - mode 'weak'   (NH₃)  : molécules tombent depuis une pipette généreuse, ~20 % protonées.
+// Au bout de MAX_CYCLES ajouts, l'état final est figé.
 
 type Props = { mode?: 'strong' | 'weak' }
 
@@ -19,6 +19,8 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
     const baseShort = isStrong ? 'NaOH' : 'NH₃'
     const cation = isStrong ? 'Na' : 'NH₄'
     const baseColor = isStrong ? '#dde2eb' : '#b8e090'
+    const BASE_R = isStrong ? 16 : 13
+    const ION_R = 11
 
     type P = {
       x: number; y: number; vx: number; vy: number;
@@ -26,6 +28,7 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
       dissocAt: number;
       splitProgress: number;
       size: number;
+      target?: { x: number; y: number }
     }
     type Pending = { time: number; willDissociate: boolean }
 
@@ -41,10 +44,10 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
     function build(w: number, h: number) {
       W = w; H = h
       beakerTop = h * 0.22
-      beakerBot = h * 0.80
-      beakerLeft = w * 0.30
-      beakerRight = w * 0.70
-      waterTop = beakerTop + 22
+      beakerBot = h * 0.82
+      beakerLeft = w * 0.28
+      beakerRight = w * 0.72
+      waterTop = beakerTop + 26
     }
 
     function startCycle(t: number) {
@@ -52,23 +55,32 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
       cycleStartT = t
       for (let i = 0; i < PER_CYCLE; i++) {
         pending.push({
-          time: t + 0.2 + i * 0.3,
+          time: t + 0.25 + i * 0.35,
           willDissociate: i < N_DISSOC,
         })
+      }
+    }
+
+    function randomScatterTarget() {
+      const margin = 28
+      return {
+        x: beakerLeft + margin + Math.random() * (beakerRight - beakerLeft - margin * 2),
+        y: waterTop + 30 + Math.random() * (beakerBot - waterTop - 50),
       }
     }
 
     function spawnBase(t: number, willDissoc: boolean) {
       const cx = (beakerLeft + beakerRight) / 2
       parts.push({
-        x: cx + (Math.random() - 0.5) * 25,
-        y: beakerTop - 60,
-        vx: (Math.random() - 0.5) * 12,
-        vy: 30,
+        x: cx + (Math.random() - 0.5) * 35,
+        y: beakerTop - 70,
+        vx: (Math.random() - 0.5) * 55,
+        vy: 50,
         kind: 'BASE',
         dissocAt: willDissoc ? t + 2.0 + Math.random() * 1.5 : -1,
         splitProgress: 0,
-        size: isStrong ? 12 : 7,
+        size: BASE_R,
+        target: randomScatterTarget(),
       })
     }
 
@@ -90,18 +102,17 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
         }
         pending = stillPending
 
-        // Pipette anim
         const cyclePhase = (t - cycleStartT) / CYCLE_DUR
         let pipetteOffset = 0
         if (!frozen) {
-          if (cyclePhase < 0.05) pipetteOffset = (cyclePhase / 0.05) * 25
-          else if (cyclePhase < 0.30) pipetteOffset = 25
-          else if (cyclePhase < 0.38) pipetteOffset = 25 * (1 - (cyclePhase - 0.30) / 0.08)
+          if (cyclePhase < 0.05) pipetteOffset = (cyclePhase / 0.05) * 30
+          else if (cyclePhase < 0.34) pipetteOffset = 30
+          else if (cyclePhase < 0.42) pipetteOffset = 30 * (1 - (cyclePhase - 0.34) / 0.08)
         }
 
         // Bécher
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)'
-        ctx.lineWidth = 2
+        ctx.strokeStyle = 'rgba(255,255,255,0.28)'
+        ctx.lineWidth = 2.5
         ctx.beginPath()
         ctx.moveTo(beakerLeft, beakerTop); ctx.lineTo(beakerLeft, beakerBot)
         ctx.lineTo(beakerRight, beakerBot); ctx.lineTo(beakerRight, beakerTop)
@@ -115,73 +126,101 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
         ctx.lineWidth = 1
         ctx.beginPath()
         for (let x = beakerLeft + 1; x <= beakerRight - 1; x += 4) {
-          const y = waterTop + Math.sin(x * 0.06 + t * 2.5) * 1.2
+          const y = waterTop + Math.sin(x * 0.06 + t * 2.5) * 1.6
           if (x === beakerLeft + 1) ctx.moveTo(x, y)
           else ctx.lineTo(x, y)
         }
         ctx.stroke()
-        ctx.fillStyle = 'rgba(102, 200, 255, 0.5)'
-        ctx.font = '10px sans-serif'
+        ctx.fillStyle = 'rgba(102, 200, 255, 0.55)'
+        ctx.font = '11px sans-serif'
         ctx.textAlign = 'left'
-        ctx.fillText('H₂O', beakerLeft + 6, waterTop - 4)
+        ctx.fillText('H₂O', beakerLeft + 8, waterTop - 6)
 
-        // Contenant : salière pour NaOH, pipette pour NH3
+        // Salière (strong) ou pipette (weak), tailles agrandies
         const pipX = (beakerLeft + beakerRight) / 2
-        const pipBaseY = beakerTop - 50
+        const pipBaseY = beakerTop - 70
         const pipY = pipBaseY + pipetteOffset
         if (isStrong) {
-          // Salière
+          const SW = 72, SH = 46
           ctx.fillStyle = '#aab4c5'
-          ctx.fillRect(pipX - 22, pipY - 28, 44, 28)
+          ctx.fillRect(pipX - SW / 2, pipY - SH, SW, SH)
           ctx.fillStyle = '#6d7484'
-          ctx.fillRect(pipX - 22, pipY - 28, 44, 6)
+          ctx.fillRect(pipX - SW / 2, pipY - SH, SW, 10)
           ctx.fillStyle = '#0a0e1a'
-          for (let i = -1; i <= 1; i++) {
-            ctx.beginPath(); ctx.arc(pipX + i * 10, pipY - 25, 1.6, 0, Math.PI * 2); ctx.fill()
+          for (let i = -2; i <= 2; i++) {
+            ctx.beginPath(); ctx.arc(pipX + i * 12, pipY - SH + 5, 2.2, 0, Math.PI * 2); ctx.fill()
           }
+          ctx.fillStyle = '#fff'
+          ctx.font = 'bold 11px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.fillText(baseShort, pipX, pipY - SH / 2 + 6)
         } else {
-          // Pipette
+          const PIP_W = 30, PIP_H = 60
           ctx.fillStyle = '#aab4c5'
-          ctx.fillRect(pipX - 9, pipY - 36, 18, 36)
+          ctx.fillRect(pipX - PIP_W / 2, pipY - PIP_H, PIP_W, PIP_H)
           ctx.fillStyle = '#6d7484'
-          ctx.fillRect(pipX - 9, pipY - 36, 18, 6)
-          ctx.fillStyle = '#888'
+          ctx.fillRect(pipX - PIP_W / 2, pipY - PIP_H, PIP_W, 10)
+          ctx.fillStyle = '#7a818f'
           ctx.beginPath()
-          ctx.moveTo(pipX - 9, pipY)
-          ctx.lineTo(pipX, pipY + 14)
-          ctx.lineTo(pipX + 9, pipY)
+          ctx.moveTo(pipX - PIP_W / 2, pipY)
+          ctx.lineTo(pipX, pipY + 22)
+          ctx.lineTo(pipX + PIP_W / 2, pipY)
           ctx.closePath(); ctx.fill()
           ctx.fillStyle = baseColor
-          ctx.fillRect(pipX - 6, pipY - 30, 12, 22)
+          ctx.fillRect(pipX - PIP_W / 2 + 4, pipY - PIP_H + 12, PIP_W - 8, PIP_H - 18)
+          ctx.fillStyle = '#0a0e1a'
+          ctx.font = 'bold 11px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText(baseShort, pipX, pipY - PIP_H / 2 + 2)
         }
         ctx.fillStyle = '#fff'
-        ctx.font = 'bold 11px sans-serif'
+        ctx.font = 'bold 13px sans-serif'
+        ctx.textBaseline = 'alphabetic'
         ctx.textAlign = 'center'
-        ctx.fillText(baseName, pipX, pipY - 44)
+        ctx.fillText(baseName, pipX, pipY - (isStrong ? 52 : 68))
+
+        // Goutte si pipette
+        if (!isStrong && !frozen && cyclePhase > 0.10 && cyclePhase < 0.40) {
+          const dropPhase = ((cyclePhase - 0.10) * 2) % 1
+          const dropY = pipY + 22 + dropPhase * (waterTop - pipY - 26)
+          ctx.fillStyle = baseColor
+          ctx.beginPath()
+          ctx.ellipse(pipX, dropY, 6, 9, 0, 0, Math.PI * 2)
+          ctx.fill()
+        }
 
         // Update particles
         for (const p of parts) {
-          if (p.y < waterTop - 2) {
-            p.vy += 220 * dt
+          if (p.y < waterTop - 4) {
+            p.vy += 250 * dt
             p.x += p.vx * dt
             p.y += p.vy * dt
-            if (p.y >= waterTop - 2) {
+            if (p.y >= waterTop - 4) {
               p.y = waterTop
-              p.vy *= 0.25
-              p.vy += 25
+              p.vy *= 0.2
             }
           } else {
-            const downBias = p.kind === 'BASE' && isStrong ? 30 : 8
-            p.vx += (Math.random() - 0.5) * 80 * dt
-            p.vy += (Math.random() - 0.5) * 60 * dt + downBias * dt
-            p.vx *= 0.95
-            p.vy *= 0.95
+            if (p.target) {
+              const dx = p.target.x - p.x
+              const dy = p.target.y - p.y
+              const dist = Math.hypot(dx, dy)
+              if (dist < 25) p.target = undefined
+              else {
+                p.vx += (dx / dist) * 120 * dt
+                p.vy += (dy / dist) * 120 * dt
+              }
+            }
+            p.vx += (Math.random() - 0.5) * 110 * dt
+            p.vy += (Math.random() - 0.5) * 110 * dt
+            p.vx *= 0.94
+            p.vy *= 0.94
             p.x += p.vx * dt
             p.y += p.vy * dt
-            if (p.x < beakerLeft + 8) { p.x = beakerLeft + 8; p.vx *= -0.5 }
-            if (p.x > beakerRight - 8) { p.x = beakerRight - 8; p.vx *= -0.5 }
-            if (p.y < waterTop + 4) { p.y = waterTop + 4; p.vy = Math.abs(p.vy) * 0.5 }
-            if (p.y > beakerBot - 6) { p.y = beakerBot - 6; p.vy = -Math.abs(p.vy) * 0.5 }
+            if (p.x < beakerLeft + p.size + 2) { p.x = beakerLeft + p.size + 2; p.vx *= -0.5 }
+            if (p.x > beakerRight - p.size - 2) { p.x = beakerRight - p.size - 2; p.vx *= -0.5 }
+            if (p.y < waterTop + p.size) { p.y = waterTop + p.size; p.vy = Math.abs(p.vy) * 0.4 }
+            if (p.y > beakerBot - p.size - 2) { p.y = beakerBot - p.size - 2; p.vy = -Math.abs(p.vy) * 0.4 }
           }
 
           if (p.kind === 'BASE' && p.dissocAt > 0 && t >= p.dissocAt) {
@@ -190,12 +229,14 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
               p.kind = 'CAT'
               p.dissocAt = -1
               p.splitProgress = 0
-              p.size = 6
+              p.size = ION_R
+              p.target = randomScatterTarget()
               parts.push({
-                x: p.x + 6, y: p.y - 2,
-                vx: -p.vx * 0.4 + (Math.random() - 0.5) * 50,
-                vy: -p.vy * 0.4 + (Math.random() - 0.5) * 50,
-                kind: 'OH', dissocAt: -1, splitProgress: 0, size: 6,
+                x: p.x + 10, y: p.y - 4,
+                vx: -p.vx * 0.3 + (Math.random() - 0.5) * 80,
+                vy: -p.vy * 0.3 + (Math.random() - 0.5) * 80,
+                kind: 'OH', dissocAt: -1, splitProgress: 0, size: ION_R,
+                target: randomScatterTarget(),
               })
             }
           }
@@ -207,43 +248,58 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
             const flicker = p.splitProgress > 0 ? 0.5 + 0.5 * Math.sin(p.splitProgress * 25) : 1
             ctx.globalAlpha = flicker
             if (isStrong) {
-              // Petit cube de NaOH
-              ctx.fillStyle = baseColor
+              // Cube de NaOH (pastille)
+              const g = ctx.createLinearGradient(p.x - p.size, p.y - p.size, p.x + p.size, p.y + p.size)
+              g.addColorStop(0, '#ffffff')
+              g.addColorStop(1, baseColor)
+              ctx.fillStyle = g
               ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2)
-              ctx.strokeStyle = 'rgba(0,0,0,0.3)'
-              ctx.lineWidth = 0.6
+              ctx.strokeStyle = 'rgba(0,0,0,0.35)'
+              ctx.lineWidth = 0.8
               ctx.strokeRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2)
               ctx.fillStyle = '#0a0e1a'
-              ctx.font = 'bold 8px sans-serif'
+              ctx.font = 'bold 10px sans-serif'
               ctx.textAlign = 'center'
               ctx.textBaseline = 'middle'
               ctx.fillText(baseShort, p.x, p.y)
             } else {
-              ctx.fillStyle = baseColor
+              const g = ctx.createRadialGradient(p.x - 3, p.y - 3, 0, p.x, p.y, p.size)
+              g.addColorStop(0, '#ffffff')
+              g.addColorStop(0.5, baseColor)
+              g.addColorStop(1, baseColor)
+              ctx.fillStyle = g
               ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill()
-              ctx.strokeStyle = 'rgba(0,0,0,0.4)'
-              ctx.lineWidth = 0.5
+              ctx.strokeStyle = 'rgba(0,0,0,0.45)'
+              ctx.lineWidth = 0.8
               ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.stroke()
               ctx.fillStyle = '#0a0e1a'
-              ctx.font = 'bold 7px sans-serif'
+              ctx.font = 'bold 10px sans-serif'
               ctx.textAlign = 'center'
               ctx.textBaseline = 'middle'
               ctx.fillText(baseShort, p.x, p.y)
             }
             ctx.globalAlpha = 1
           } else if (p.kind === 'CAT') {
-            ctx.fillStyle = '#ff8a8a'
+            const g = ctx.createRadialGradient(p.x - 3, p.y - 3, 0, p.x, p.y, p.size)
+            g.addColorStop(0, '#ffffff')
+            g.addColorStop(0.45, '#ff8a8a')
+            g.addColorStop(1, '#ff8a8a')
+            ctx.fillStyle = g
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill()
-            ctx.fillStyle = '#fff'
-            ctx.font = 'bold 7px sans-serif'
+            ctx.fillStyle = '#0a0e1a'
+            ctx.font = 'bold 9px sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
             ctx.fillText(`${cation}⁺`, p.x, p.y)
           } else if (p.kind === 'OH') {
-            ctx.fillStyle = '#7fffaa'
+            const g = ctx.createRadialGradient(p.x - 3, p.y - 3, 0, p.x, p.y, p.size)
+            g.addColorStop(0, '#ffffff')
+            g.addColorStop(0.45, '#7fffaa')
+            g.addColorStop(1, '#7fffaa')
+            ctx.fillStyle = g
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill()
             ctx.fillStyle = '#0a0e1a'
-            ctx.font = 'bold 7px sans-serif'
+            ctx.font = 'bold 9px sans-serif'
             ctx.textAlign = 'center'
             ctx.textBaseline = 'middle'
             ctx.fillText('OH⁻', p.x, p.y)
@@ -251,28 +307,28 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
         }
         ctx.textBaseline = 'alphabetic'
 
-        // Bilan (bas-gauche)
+        // Bilan
         const intact = parts.filter(p => p.kind === 'BASE').length
         const oh = parts.filter(p => p.kind === 'OH').length
         const totalAdded = cycle * PER_CYCLE
         const dissocPct = totalAdded > 0 ? Math.round((oh / totalAdded) * 100) : 0
-        const px0 = 14, py0 = h - 100
+        const px0 = 14, py0 = h - 110
         ctx.fillStyle = 'rgba(10,14,26,0.78)'
-        ctx.fillRect(px0 - 4, py0 - 4, 150, 70)
+        ctx.fillRect(px0 - 4, py0 - 4, 170, 80)
         ctx.strokeStyle = 'rgba(255,255,255,0.18)'
         ctx.lineWidth = 1
-        ctx.strokeRect(px0 - 4, py0 - 4, 150, 70)
+        ctx.strokeRect(px0 - 4, py0 - 4, 170, 80)
         ctx.fillStyle = 'rgba(255,255,255,0.55)'
-        ctx.font = 'bold 9px sans-serif'
+        ctx.font = 'bold 10px sans-serif'
         ctx.textAlign = 'left'
         ctx.textBaseline = 'top'
         ctx.fillText('BILAN', px0, py0)
-        let yLine = py0 + 14
+        let yLine = py0 + 16
         const line = (label: string, color: string) => {
           ctx.fillStyle = color
-          ctx.font = '10px sans-serif'
+          ctx.font = '11px sans-serif'
           ctx.fillText(label, px0, yLine)
-          yLine += 13
+          yLine += 15
         }
         line(`${baseShort} restants : ${intact}`, baseColor)
         line(`OH⁻ libérés : ${oh}`, '#7fffaa')
