@@ -1,7 +1,7 @@
 .reactions {
   flex: 1;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 340px 1fr;
   gap: 14px;
   padding: 16px 20px 20px;
   min-height: 0;
@@ -21,13 +21,13 @@
 .rg-head { padding: 6px 8px; }
 .rg-label {
   display: block;
-  font-size: 11px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--accent);
   font-weight: 600;
 }
-.rg-hint { font-size: 10px; color: var(--text-dim); line-height: 1.35; }
+.rg-hint { font-size: 13px; color: var(--text-dim); line-height: 1.35; }
 
 .rx-btn {
   width: 100%;
@@ -51,55 +51,59 @@
   background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(255,85,119,0.08));
   border-color: var(--accent);
 }
-.rb-ico { font-size: 20px; flex-shrink: 0; }
+.rb-ico { font-size: 23px; flex-shrink: 0; }
 .rb-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.rb-name { font-size: 13px; font-weight: 500; }
+.rb-name { font-size: 16px; font-weight: 500; }
 .rb-eq {
   font-family: ui-monospace, monospace;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--text-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Sous-onglets (variantes fort/faible pour acide-base) */
-.rx-subtabs {
-  margin-top: 8px;
-  padding: 8px 10px 10px;
-  background: rgba(0, 212, 255, 0.04);
-  border: 1px dashed var(--border);
-  border-radius: 8px;
+/* Bandeau de variante (fort/faible) dans le panneau de détail */
+.rd-variant {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(0, 212, 255, 0.06);
+  border: 1px dashed rgba(0, 212, 255, 0.35);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
 }
-.rs-label {
-  display: block;
-  font-size: 10px;
+.rv-label {
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
-.rs-tabs {
+.rv-tabs {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  flex: 1;
 }
-.rs-tab {
+.rv-tab {
   flex: 1;
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 11px;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 14px;
   color: var(--text-dim);
   cursor: pointer;
   transition: all 0.12s ease;
 }
-.rs-tab:hover {
+.rv-tab:hover {
   border-color: var(--accent);
   color: var(--text);
 }
-.rs-tab.active {
-  background: linear-gradient(135deg, rgba(0,212,255,0.18), rgba(255,85,119,0.10));
+.rv-tab.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.20), rgba(255,85,119,0.12));
   border-color: var(--accent);
   color: var(--text);
   font-weight: 600;
@@ -128,9 +132,9 @@
   border-bottom: 1px solid var(--border);
 }
 .rd-ico {
-  font-size: 36px;
-  width: 64px;
-  height: 64px;
+  font-size: 40px;
+  width: 70px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -139,19 +143,19 @@
   flex-shrink: 0;
 }
 .rd-titles { flex: 1; min-width: 0; }
-.rd-head h1 { margin: 0; font-size: 22px; color: var(--text); }
+.rd-head h1 { margin: 0; font-size: 25px; color: var(--text); }
 .rd-equation {
   margin: 4px 0 0;
   font-family: ui-monospace, monospace;
-  font-size: 14px;
+  font-size: 17px;
   color: var(--accent);
 }
 .rd-energetics {
-  padding: 5px 12px;
+  padding: 6px 14px;
   background: var(--bg-2);
   border: 1px solid;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 600;
@@ -182,14 +186,14 @@
 }
 .rd-card h3 {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: 16px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text);
 }
-.rd-card p { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+.rd-card p { margin: 0; font-size: 16px; color: var(--text-dim); line-height: 1.6; }
 .rd-card ul { margin: 0; padding-left: 20px; }
-.rd-card li { font-size: 13px; color: var(--text-dim); line-height: 1.55; margin-bottom: 4px; }
+.rd-card li { font-size: 16px; color: var(--text-dim); line-height: 1.55; margin-bottom: 4px; }
 .rd-card.pitfalls li::marker { color: #ff7777; }
 
 .mechanism {
@@ -204,19 +208,19 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-dim);
   line-height: 1.55;
 }
 .mech-step {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--accent);
   color: #06121d;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -224,23 +228,23 @@
 
 .rd-examples {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 8px;
 }
 .rd-examples .ex {
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 10px 14px;
 }
-.ex-name { color: var(--text); font-size: 12px; font-weight: 600; }
+.ex-name { color: var(--text); font-size: 15px; font-weight: 600; }
 .ex-equation {
   font-family: ui-monospace, monospace;
-  font-size: 12px;
+  font-size: 15px;
   color: var(--accent);
   margin-top: 4px;
 }
-.ex-notes { color: var(--text-dim); font-size: 11px; margin-top: 4px; line-height: 1.4; }
+.ex-notes { color: var(--text-dim); font-size: 14px; margin-top: 4px; line-height: 1.4; }
 
 @media (max-width: 900px) {
   .reactions { grid-template-columns: 1fr; padding: 12px; }

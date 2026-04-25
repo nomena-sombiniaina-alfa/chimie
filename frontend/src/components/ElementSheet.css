@@ -9,9 +9,9 @@
   border-radius: 14px;
   box-shadow: 0 4px 20px color-mix(in srgb, var(--col) 10%, transparent);
 }
-.left .z { color: var(--text-dim); font-size: 12px; letter-spacing: 1px; }
+.left .z { color: var(--text-dim); font-size: 15px; letter-spacing: 1px; }
 .left .sym {
-  font-size: 56px;
+  font-size: 59px;
   font-weight: 800;
   background: linear-gradient(135deg, var(--col), color-mix(in srgb, var(--col) 50%, #fff));
   -webkit-background-clip: text;
@@ -20,13 +20,13 @@
   line-height: 1;
   margin: 4px 0;
 }
-.left .name { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.left .cat { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+.left .name { font-size: 25px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.left .cat { font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
 .middle { display: flex; flex-direction: column; gap: 10px; justify-content: center; }
 .stat { display: flex; flex-direction: column; gap: 2px; }
-.stat-label { color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-.stat-val { color: var(--text); font-size: 15px; font-weight: 600; font-family: ui-monospace, monospace; }
+.stat-label { color: var(--text-dim); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+.stat-val { color: var(--text); font-size: 18px; font-weight: 600; font-family: ui-monospace, monospace; }
 
 .right { display: flex; flex-direction: column; gap: 10px; justify-content: center; }
 .particle-row { display: flex; gap: 10px; }
@@ -50,12 +50,12 @@
 .particle .dot.proton  { background: #ff7766; box-shadow: 0 0 8px rgba(255,119,102,0.5); }
 .particle .dot.neutron { background: #9bb0d6; box-shadow: 0 0 8px rgba(155,176,214,0.5); }
 .particle .dot.electron{ background: #9be0ff; box-shadow: 0 0 8px rgba(155,224,255,0.5); }
-.particle .count { font-size: 18px; font-weight: 700; color: var(--text); }
-.particle .kind { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.particle .count { font-size: 21px; font-weight: 700; color: var(--text); }
+.particle .kind { color: var(--text-dim); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
 
 .charge-block { display: flex; flex-direction: column; gap: 6px; }
 .charge-label {
-  font-size: 10px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-dim);
@@ -83,11 +83,11 @@
 .charge-btn .ion-sym {
   font-family: ui-monospace, monospace;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text);
 }
 .charge-btn .ion-energy {
-  font-size: 9px;
+  font-size: 12px;
   color: var(--text-dim);
   font-family: ui-monospace, monospace;
   white-space: nowrap;
@@ -108,7 +108,7 @@
   border: 1px solid rgba(255, 200, 80, 0.30);
   color: #ffcc66;
   border-radius: 5px;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .valence {
@@ -116,7 +116,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 15px;
   color: var(--text-dim);
   display: flex;
   justify-content: space-between;

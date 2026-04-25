@@ -136,25 +136,6 @@ export default function ReactionsHub() {
                 </span>
               </button>
             ))}
-            {g.id === 'acid-base' && isAcidBase && theory && (
-              <div className="rx-subtabs">
-                <span className="rs-label">Variante</span>
-                <div className="rs-tabs">
-                  <button
-                    className={`rs-tab ${acidBaseMode === 'strong' ? 'active' : ''}`}
-                    onClick={() => setAcidBaseMode('strong')}
-                  >
-                    {theory.strongLabel}
-                  </button>
-                  <button
-                    className={`rs-tab ${acidBaseMode === 'weak' ? 'active' : ''}`}
-                    onClick={() => setAcidBaseMode('weak')}
-                  >
-                    {theory.weakLabel}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         ))}
       </aside>
@@ -176,6 +157,28 @@ export default function ReactionsHub() {
               </span>
             )}
           </header>
+
+          {isAcidBase && theory && (
+            <section className="rd-variant">
+              <span className="rv-label">Variante de la réaction</span>
+              <div className="rv-tabs">
+                <button
+                  type="button"
+                  className={`rv-tab ${acidBaseMode === 'strong' ? 'active' : ''}`}
+                  onClick={() => setAcidBaseMode('strong')}
+                >
+                  {theory.strongLabel}
+                </button>
+                <button
+                  type="button"
+                  className={`rv-tab ${acidBaseMode === 'weak' ? 'active' : ''}`}
+                  onClick={() => setAcidBaseMode('weak')}
+                >
+                  {theory.weakLabel}
+                </button>
+              </div>
+            </section>
+          )}
 
           {isAcidBase && AcidBaseDiagramFC ? (
             <section className="rd-diagram">

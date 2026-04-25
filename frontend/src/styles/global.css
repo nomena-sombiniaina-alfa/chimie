@@ -110,7 +110,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .app-header h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 25px;
   letter-spacing: 0.5px;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
   -webkit-background-clip: text;
@@ -120,7 +120,7 @@ input[type="range"]::-moz-range-thumb {
 .app-header p {
   margin: 6px 0 0;
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .tabs {
@@ -137,7 +137,7 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid var(--border);
   background: var(--bg-1);
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -154,7 +154,7 @@ input[type="range"]::-moz-range-thumb {
   color: var(--text);
   box-shadow: 0 0 0 1px rgba(0,212,255,0.25), 0 4px 18px rgba(0,212,255,0.15);
 }
-.tab .ico { font-size: 16px; }
+.tab .ico { font-size: 19px; }
 
 .tab-content {
   flex: 1;
@@ -166,7 +166,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 40px;
   color: var(--text-dim);
   text-align: center;
-  font-size: 14px;
+  font-size: 17px;
 }
 .error { color: #ff7777; }
 

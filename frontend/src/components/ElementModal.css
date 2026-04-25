@@ -50,7 +50,7 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 19px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,7 +58,7 @@
 }
 .nav-btn:hover:not(:disabled), .close-btn:hover { border-color: var(--accent); color: var(--accent); }
 .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.close-btn { margin-left: auto; font-size: 20px; }
+.close-btn { margin-left: auto; font-size: 23px; }
 .close-btn:hover { background: rgba(255, 90, 90, 0.15); border-color: #ff5a5a; color: #ff5a5a; }
 
 .modal-body {
@@ -105,10 +105,10 @@
   box-shadow: 0 0 0 1px rgba(0,212,255,0.25), 0 4px 14px rgba(0,212,255,0.15);
 }
 .vt-top { display: flex; align-items: center; gap: 6px; }
-.vt-ico { font-size: 14px; }
-.vt-label { font-weight: 600; color: var(--text); font-size: 13px; }
+.vt-ico { font-size: 17px; }
+.vt-label { font-weight: 600; color: var(--text); font-size: 16px; }
 .vt-year {
-  font-size: 9px;
+  font-size: 12px;
   font-family: ui-monospace, monospace;
   color: var(--text-dim);
   background: var(--bg-2);
@@ -117,7 +117,7 @@
   border: 1px solid var(--border);
 }
 .view-tab.active .vt-year { color: var(--accent); border-color: var(--accent); }
-.vt-q { color: var(--text-dim); font-size: 10px; margin-top: 3px; }
+.vt-q { color: var(--text-dim); font-size: 13px; margin-top: 3px; }
 
 .view-container {
   flex: 1;
