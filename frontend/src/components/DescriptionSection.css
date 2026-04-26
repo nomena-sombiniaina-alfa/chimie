@@ -24,13 +24,13 @@
 }
 .desc-section .card-head h4 {
   margin: 0;
-  font-size: 15px;
+  font-size: 20px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text);
 }
 .desc-section .ico {
-  font-size: 17px;
+  font-size: 22px;
   width: 26px;
   height: 26px;
   display: flex;
@@ -43,14 +43,14 @@
 
 .desc-section .card p {
   margin: 0;
-  font-size: 16px;
+  font-size: 21px;
   color: var(--text-dim);
   line-height: 1.55;
 }
 .desc-section .card ul {
   margin: 0;
   padding-left: 18px;
-  font-size: 16px;
+  font-size: 21px;
   color: var(--text-dim);
   line-height: 1.55;
 }
