@@ -20,48 +20,50 @@ export function drawLegend(
   items: LegendItem[],
   title = 'Légende',
 ) {
-  const pad = 8
-  const swatch = 11
-  const lineH = 17
-  const titleH = 13
+  const pad = 12
+  const swatch = 16
+  const lineH = 24
+  const titleH = 18
+  const titleFontPx = 14
+  const itemFontPx = 15
 
-  ctx.font = '11px sans-serif'
+  ctx.font = `${itemFontPx}px sans-serif`
   let maxW = 0
   for (const it of items) {
     const w = ctx.measureText(it.label).width
     if (w > maxW) maxW = w
   }
-  ctx.font = 'bold 10px sans-serif'
+  ctx.font = `bold ${titleFontPx}px sans-serif`
   const titleW = ctx.measureText(title.toUpperCase()).width
-  const innerW = Math.max(maxW + swatch + 8, titleW)
+  const innerW = Math.max(maxW + swatch + 10, titleW)
   const boxW = pad * 2 + innerW
   const boxH = pad * 2 + titleH + items.length * lineH
 
   // Fond
-  ctx.fillStyle = 'rgba(10, 14, 26, 0.78)'
+  ctx.fillStyle = 'rgba(10, 14, 26, 0.82)'
   ctx.fillRect(x, y, boxW, boxH)
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)'
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)'
   ctx.lineWidth = 1
   ctx.strokeRect(x, y, boxW, boxH)
 
   // Titre
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.55)'
-  ctx.font = 'bold 10px sans-serif'
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.65)'
+  ctx.font = `bold ${titleFontPx}px sans-serif`
   ctx.textAlign = 'left'
   ctx.textBaseline = 'top'
   ctx.fillText(title.toUpperCase(), x + pad, y + pad)
 
   // Items
-  ctx.font = '11px sans-serif'
+  ctx.font = `${itemFontPx}px sans-serif`
   for (let i = 0; i < items.length; i++) {
     const it = items[i]
-    const cy = y + pad + titleH + 2 + i * lineH + swatch / 2
+    const cy = y + pad + titleH + 4 + i * lineH + swatch / 2
     const cx = x + pad + swatch / 2
     drawSwatch(ctx, cx, cy, swatch, it.color, it.shape || 'circle')
     ctx.fillStyle = '#fff'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
-    ctx.fillText(it.label, x + pad + swatch + 8, cy)
+    ctx.fillText(it.label, x + pad + swatch + 10, cy)
   }
 }
 
@@ -131,17 +133,17 @@ export function drawCycleCounter(
   label = 'Cycle',
 ) {
   const txt = max ? `${label} : ${current} / ${max}` : `${label} : ${current}`
-  ctx.font = '10px sans-serif'
+  ctx.font = 'bold 14px sans-serif'
   const tw = ctx.measureText(txt).width
-  const padX = 8, padY = 4
+  const padX = 12
   const boxW = tw + padX * 2
-  const boxH = 18
-  ctx.fillStyle = 'rgba(10, 14, 26, 0.7)'
+  const boxH = 28
+  ctx.fillStyle = 'rgba(10, 14, 26, 0.78)'
   ctx.fillRect(x - boxW, y - boxH, boxW, boxH)
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)'
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)'
   ctx.lineWidth = 1
   ctx.strokeRect(x - boxW, y - boxH, boxW, boxH)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'
   ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
   ctx.fillText(txt, x - boxW + padX, y - boxH / 2)

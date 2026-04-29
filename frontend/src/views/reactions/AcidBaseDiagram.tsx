@@ -402,23 +402,23 @@ export default function AcidBaseDiagram({ mode = 'strong' }: Props) {
         drawPHGauge(ctx, w - 50, h * 0.30, 18, h * 0.45, pH)
 
         // Bilan
-        const px0 = 14, py0 = h - 130
-        ctx.fillStyle = 'rgba(10,14,26,0.78)'
-        ctx.fillRect(px0 - 4, py0 - 4, 170, 95)
-        ctx.strokeStyle = 'rgba(255,255,255,0.18)'
+        const px0 = 16, py0 = h - 170
+        ctx.fillStyle = 'rgba(10,14,26,0.82)'
+        ctx.fillRect(px0 - 6, py0 - 6, 220, 135)
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)'
         ctx.lineWidth = 1
-        ctx.strokeRect(px0 - 4, py0 - 4, 170, 95)
-        ctx.fillStyle = 'rgba(255,255,255,0.55)'
-        ctx.font = 'bold 10px sans-serif'
+        ctx.strokeRect(px0 - 6, py0 - 6, 220, 135)
+        ctx.fillStyle = 'rgba(255,255,255,0.65)'
+        ctx.font = 'bold 14px sans-serif'
         ctx.textAlign = 'left'
         ctx.textBaseline = 'top'
         ctx.fillText('BILAN', px0, py0)
-        let yLine = py0 + 16
+        let yLine = py0 + 24
         const line = (label: string, color: string) => {
           ctx.fillStyle = color
-          ctx.font = '11px sans-serif'
+          ctx.font = '15px sans-serif'
           ctx.fillText(label, px0, yLine)
-          yLine += 15
+          yLine += 22
         }
         line(`${acidLabel} restants : ${acidCount}`, acidColor)
         line(`OH⁻ en attente : ${ohRemain}`, '#7fffaa')
@@ -490,18 +490,18 @@ function drawPHGauge(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   ctx.lineTo(x, pY + 6)
   ctx.closePath()
   ctx.fill(); ctx.stroke()
-  ctx.fillStyle = 'rgba(255,255,255,0.85)'
-  ctx.font = 'bold 11px sans-serif'
+  ctx.fillStyle = 'rgba(255,255,255,0.9)'
+  ctx.font = 'bold 15px sans-serif'
   ctx.textAlign = 'right'
   ctx.textBaseline = 'middle'
-  ctx.fillText(`pH ${pH.toFixed(1)}`, x - 12, pY)
-  ctx.fillStyle = 'rgba(255,255,255,0.5)'
-  ctx.font = '10px sans-serif'
+  ctx.fillText(`pH ${pH.toFixed(1)}`, x - 14, pY)
+  ctx.fillStyle = 'rgba(255,255,255,0.6)'
+  ctx.font = 'bold 13px sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
-  ctx.fillText('0', x + w / 2, y - 14)
+  ctx.fillText('0', x + w / 2, y - 18)
   ctx.textBaseline = 'bottom'
-  ctx.fillText('14', x + w / 2, y + h + 14)
+  ctx.fillText('14', x + w / 2, y + h + 18)
   ctx.textAlign = 'start'
   ctx.textBaseline = 'alphabetic'
 }

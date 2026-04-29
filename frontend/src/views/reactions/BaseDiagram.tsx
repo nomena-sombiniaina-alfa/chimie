@@ -312,23 +312,23 @@ export default function BaseDiagram({ mode = 'strong' }: Props) {
         const oh = parts.filter(p => p.kind === 'OH').length
         const totalAdded = cycle * PER_CYCLE
         const dissocPct = totalAdded > 0 ? Math.round((oh / totalAdded) * 100) : 0
-        const px0 = 14, py0 = h - 110
-        ctx.fillStyle = 'rgba(10,14,26,0.78)'
-        ctx.fillRect(px0 - 4, py0 - 4, 170, 80)
-        ctx.strokeStyle = 'rgba(255,255,255,0.18)'
+        const px0 = 16, py0 = h - 140
+        ctx.fillStyle = 'rgba(10,14,26,0.82)'
+        ctx.fillRect(px0 - 6, py0 - 6, 220, 110)
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)'
         ctx.lineWidth = 1
-        ctx.strokeRect(px0 - 4, py0 - 4, 170, 80)
-        ctx.fillStyle = 'rgba(255,255,255,0.55)'
-        ctx.font = 'bold 10px sans-serif'
+        ctx.strokeRect(px0 - 6, py0 - 6, 220, 110)
+        ctx.fillStyle = 'rgba(255,255,255,0.65)'
+        ctx.font = 'bold 14px sans-serif'
         ctx.textAlign = 'left'
         ctx.textBaseline = 'top'
         ctx.fillText('BILAN', px0, py0)
-        let yLine = py0 + 16
+        let yLine = py0 + 24
         const line = (label: string, color: string) => {
           ctx.fillStyle = color
-          ctx.font = '11px sans-serif'
+          ctx.font = '15px sans-serif'
           ctx.fillText(label, px0, yLine)
-          yLine += 15
+          yLine += 22
         }
         line(`${baseShort} restants : ${intact}`, baseColor)
         line(`OH⁻ libérés : ${oh}`, '#7fffaa')
