@@ -13,6 +13,7 @@ import EliminationDiagram from '../views/reactions/EliminationDiagram'
 import PrecipitationDiagram from '../views/reactions/PrecipitationDiagram'
 import DissolutionDiagram from '../views/reactions/DissolutionDiagram'
 import IonicEquilibriumDiagram from '../views/reactions/IonicEquilibriumDiagram'
+import Loader from './Loader'
 import './ReactionsHub.css'
 
 const CATEGORIES = [
@@ -107,7 +108,7 @@ export default function ReactionsHub() {
   }, [reactions])
 
   if (error)   return <div className="error">Erreur : {error}</div>
-  if (!loaded) return <div className="loading">Chargement des réactions…</div>
+  if (!loaded) return <Loader label="Chargement des réactions…" />
 
   const isAcidBase = currentDetail ? ACID_BASE_SLUGS.has(currentDetail.slug) : false
   const PlainDiagram = currentDetail ? PLAIN_DIAGRAMS[currentDetail.slug] : null

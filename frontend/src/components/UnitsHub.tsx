@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { useUnitsStore } from '../store/unitsStore'
+import Loader from './Loader'
 import './UnitsHub.css'
 
 const GROUPS = [
@@ -34,7 +35,7 @@ export default function UnitsHub() {
   }, [filteredUnits])
 
   if (error)   return <div className="error">Erreur : {error}</div>
-  if (!loaded) return <div className="loading">Chargement des unités…</div>
+  if (!loaded) return <Loader label="Chargement des unités…" />
 
   return (
     <div className="units">

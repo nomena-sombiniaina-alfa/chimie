@@ -8,6 +8,7 @@ import VanDerWaalsDiagram from '../views/bonds/VanDerWaalsDiagram'
 import LewisDiagram from '../views/bonds/LewisDiagram'
 import VseprDiagram from '../views/bonds/VseprDiagram'
 import MoDiagram from '../views/bonds/MoDiagram'
+import Loader from './Loader'
 import './BondsHub.css'
 
 const CATEGORIES = [
@@ -43,7 +44,7 @@ export default function BondsHub() {
   }, [bonds])
 
   if (error)   return <div className="error">Erreur : {error}</div>
-  if (!loaded) return <div className="loading">Chargement des liaisons…</div>
+  if (!loaded) return <Loader label="Chargement des liaisons…" />
 
   const Diagram = currentDetail ? DIAGRAMS[currentDetail.slug] : null
 

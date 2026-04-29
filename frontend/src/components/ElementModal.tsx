@@ -14,6 +14,7 @@ import ConfigurationView from '../views/ConfigurationView'
 import PropertiesView from '../views/PropertiesView'
 import IsotopesView from '../views/IsotopesView'
 import BondsView from '../views/BondsView'
+import Loader from './Loader'
 import './ElementModal.css'
 
 type ViewId = 'dalton' | 'thomson' | 'rutherford' | 'bohr' | 'schrodinger' | 'heisenberg' |
@@ -96,7 +97,7 @@ export default function ElementModal() {
 
         <div className="modal-body">
           {!currentDetail ? (
-            <div className="loading">Chargement de la fiche…</div>
+            <Loader label="Chargement de la fiche…" variant="card" />
           ) : (
             <>
               <ElementSheet />

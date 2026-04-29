@@ -1,0 +1,157 @@
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  color: var(--text-dim);
+}
+.loader-page {
+  width: 100%;
+  flex: 1;
+  min-height: 280px;
+  padding: 50px 20px;
+}
+.loader-card {
+  padding: 40px 20px;
+}
+.loader-inline {
+  flex-direction: row;
+  gap: 14px;
+  padding: 8px 0;
+}
+.loader-inline .atom-loader {
+  width: 36px;
+  height: 36px;
+}
+.loader-inline .nucleus {
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+}
+.loader-inline .electron {
+  width: 6px;
+  height: 6px;
+  top: -3px;
+  margin-left: -3px;
+}
+
+/* Atome */
+.atom-loader {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+.atom-loader .nucleus {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff, var(--accent));
+  box-shadow:
+    0 0 14px rgba(0, 212, 255, 0.55),
+    0 0 30px rgba(0, 212, 255, 0.20);
+  animation: nucleus-pulse 1.6s ease-in-out infinite;
+}
+.orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 212, 255, 0.25);
+  pointer-events: none;
+}
+.orbit-inner {
+  width: 50px;
+  height: 50px;
+  margin: -25px 0 0 -25px;
+  animation: orbit-spin 1.1s linear infinite reverse;
+}
+.orbit-middle {
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  animation: orbit-spin 1.7s linear infinite;
+}
+.orbit-outer {
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  animation: orbit-spin 2.3s linear infinite reverse;
+}
+.electron {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
+}
+.e-blue {
+  background: #00d4ff;
+  color: #00d4ff;
+}
+.e-pink {
+  background: #ff5577;
+  color: #ff5577;
+}
+.e-yellow {
+  background: #ffcc44;
+  color: #ffcc44;
+}
+
+.loader-label {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  animation: label-pulse 1.4s ease-in-out infinite;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes orbit-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes nucleus-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 14px rgba(0, 212, 255, 0.55),
+      0 0 30px rgba(0, 212, 255, 0.20);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow:
+      0 0 18px rgba(0, 212, 255, 0.75),
+      0 0 38px rgba(0, 212, 255, 0.30);
+  }
+}
+@keyframes label-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atom-loader .nucleus,
+  .orbit,
+  .loader-label {
+    animation: none;
+  }
+}
